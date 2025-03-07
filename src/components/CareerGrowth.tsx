@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,6 +124,7 @@ export const CareerGrowth = () => {
   const [courses, setCourses] = useState(coursesData);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState('');
   const [resumeData, setResumeData] = useState({
     firstName: '',
     lastName: '',
@@ -167,7 +167,6 @@ export const CareerGrowth = () => {
     } else {
       setActiveFilters([...activeFilters, filter]);
       
-      // Show toast notification
       toast({
         title: "Filter Applied",
         description: `Showing results for "${filter}" jobs`,
@@ -320,7 +319,6 @@ export const CareerGrowth = () => {
   };
   
   const generateResume = () => {
-    // Validate form
     if (!resumeData.firstName || !resumeData.lastName || !resumeData.email) {
       toast({
         title: "Missing Information",
