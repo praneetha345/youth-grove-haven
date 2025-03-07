@@ -1,165 +1,109 @@
 
 import { 
-  Brain, 
+  Heart, 
+  BrainCircuit, 
   Briefcase, 
-  PieChart, 
+  Smartphone, 
   Users, 
-  Shield, 
-  Award, 
-  LayoutDashboard, 
-  Trophy, 
-  Bot,
-  Palette,
-  UserPlus,
-  Glasses,
-  Bell,
-  Map,
-  Music,
-  MapPin
-} from 'lucide-react';
+  LifeBuoy, 
+  Trophy,
+  LineChart,
+  Calendar,
+  MessageSquare 
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 const features = [
   {
+    icon: <Heart className="h-8 w-8 text-white" />,
     title: "AI Mental Health Support",
-    description: "Anonymous chatbot, mood tracking, guided meditation, and crisis helpline integration.",
-    icon: Brain,
-    color: "bg-well-blue",
-    id: "mental-health"
+    description: "Personalized chatbot support, mood tracking and guided meditations with anonymous crisis helpline integration.",
+    color: "from-well-blue to-well-purple"
   },
   {
+    icon: <Briefcase className="h-8 w-8 text-white" />,
     title: "Career Growth",
-    description: "AI career coach, job listings, skill-based learning modules, and resume builder.",
-    icon: Briefcase,
-    color: "bg-well-purple",
-    id: "career"
+    description: "AI career coach, job recommendations, skill assessment and personalized learning roadmaps.",
+    color: "from-well-purple to-well-pink"
   },
   {
+    icon: <Smartphone className="h-8 w-8 text-white" />,
     title: "Digital Detox",
-    description: "App usage analytics, detox challenges, and motivational content feed.",
-    icon: PieChart,
-    color: "bg-well-teal",
-    id: "digital-detox"
+    description: "App usage analytics, detox challenges, screen time management and digital wellbeing tips.",
+    color: "from-well-teal to-well-blue"
   },
   {
+    icon: <Users className="h-8 w-8 text-white" />,
     title: "Community Support",
-    description: "Anonymous forums, mentorship programs, expert webinars, and AI-moderated discussions.",
-    icon: Users,
-    color: "bg-well-pink",
-    id: "community"
+    description: "Anonymous forums, peer mentorship matching, expert webinars and AI-moderated discussions.",
+    color: "from-well-blue to-well-teal"
   },
   {
+    icon: <LifeBuoy className="h-8 w-8 text-white" />,
     title: "Emergency Support",
-    description: "AI sentiment detection, SOS button, emergency contacts, and therapist booking.",
-    icon: Shield,
-    color: "bg-rose-500",
-    id: "emergency"
+    description: "AI sentiment detection, crisis prevention, SOS button and therapist booking integration.",
+    color: "from-well-pink to-well-purple"
   },
   {
-    title: "Gamification & Rewards",
-    description: "Daily well-being challenges, leaderboards, personalized goals, and redeemable rewards.",
-    icon: Award,
-    color: "bg-amber-500",
-    id: "gamification"
+    icon: <Trophy className="h-8 w-8 text-white" />,
+    title: "Gamified Wellbeing",
+    description: "Personalized challenges, rewards system, achievement badges and progress tracking.",
+    color: "from-well-purple to-well-blue"
   },
   {
-    title: "AI Personalized Dashboard",
-    description: "Customizable dashboard adapting to user mood and providing daily AI recommendations.",
-    icon: LayoutDashboard,
-    color: "bg-indigo-500",
-    id: "dashboard"
+    icon: <LineChart className="h-8 w-8 text-white" />,
+    title: "Personalized Dashboard",
+    description: "AI-adaptive insights, mood-based recommendations and visual progress tracking.",
+    color: "from-well-teal to-well-purple"
   },
   {
-    title: "Self-Improvement Challenges",
-    description: "Daily and weekly challenges with points, badges, and leaderboard integration.",
-    icon: Trophy,
-    color: "bg-emerald-500",
-    id: "challenges"
+    icon: <Calendar className="h-8 w-8 text-white" />,
+    title: "Self-Improvement",
+    description: "Daily and weekly challenges with points, badges and leaderboard integration.",
+    color: "from-well-blue to-well-pink"
   },
   {
-    title: "AI Well-Being Buddy",
-    description: "Interactive AI chatbot with voice-based assistance and personalized reminders.",
-    icon: Bot,
-    color: "bg-blue-500",
-    id: "ai-buddy"
-  },
-  {
-    title: "Digital Mood Canvas",
-    description: "Express emotions through digital art with AI-generated mood-based music suggestions.",
-    icon: Palette,
-    color: "bg-fuchsia-500",
-    id: "mood-canvas"
-  },
-  {
-    title: "AI Peer Matchmaking",
-    description: "AI matches users with similar challenges or interests for support and networking.",
-    icon: UserPlus,
-    color: "bg-cyan-500",
-    id: "matchmaking"
-  },
-  {
-    title: "AR Meditation",
-    description: "AR-guided meditation, interactive breathing exercises, and immersive environments.",
-    icon: Glasses,
-    color: "bg-purple-500",
-    id: "ar-meditation"
-  },
-  {
-    title: "Smart Notification System",
-    description: "AI detects stress patterns and sends personalized well-being suggestions.",
-    icon: Bell,
-    color: "bg-orange-500",
-    id: "notifications"
-  },
-  {
-    title: "AI Career Mind Map",
-    description: "Interactive career roadmap with step-by-step guidance and job recommendations.",
-    icon: Map,
-    color: "bg-green-500",
-    id: "career-map"
-  },
-  {
-    title: "AI-Generated Podcasts",
-    description: "Dynamically generates personalized stories and career guidance podcasts.",
-    icon: Music,
-    color: "bg-pink-500",
-    id: "podcasts"
-  },
-  {
-    title: "Well-Being Map",
-    description: "AI-integrated map displaying nearby wellness spaces, mentors, and career events.",
-    icon: MapPin,
-    color: "bg-teal-500",
-    id: "well-being-map"
+    icon: <MessageSquare className="h-8 w-8 text-white" />,
+    title: "Virtual Well-Being Buddy",
+    description: "Personalized AI coach with voice assistance and empathetic conversations.",
+    color: "from-well-purple to-well-teal"
   }
 ];
 
 export const Features = () => {
   return (
-    <section className="py-24 bg-white" id="features">
+    <section id="features" className="py-20 bg-white">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
+          <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-sm font-medium text-slate-600 mb-4">
+            Our Features
+          </span>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Comprehensive <span className="text-gradient">AI-Powered</span> Features
+            AI-Powered Solutions for{" "}
+            <span className="text-gradient">Complete Well-Being</span>
           </h2>
           <p className="text-slate-600">
-            Our platform brings together powerful tools to support your mental health, career growth, and digital well-being journey.
+            Our platform combines cutting-edge AI technology with evidence-based well-being approaches
+            to support your mental health, career growth, and digital balance.
           </p>
         </div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
-            <div 
-              key={feature.id} 
-              id={feature.id}
-              className="glass-card p-6 animated-card border-t-4 hover:border-t-4"
-              style={{ borderTopColor: `var(--${feature.color.slice(3)})`, animationDelay: `${index * 0.05}s` }}
+            <motion.div 
+              key={index}
+              className="glass-card rounded-xl border border-slate-200 p-6 hover:shadow-md transition-all"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <div className={`w-12 h-12 rounded-lg ${feature.color} flex items-center justify-center text-white mb-4`}>
-                <feature.icon className="h-6 w-6" />
+              <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-4`}>
+                {feature.icon}
               </div>
               <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-slate-600 text-sm">{feature.description}</p>
-            </div>
+              <p className="text-slate-600">{feature.description}</p>
+            </motion.div>
           ))}
         </div>
       </div>
