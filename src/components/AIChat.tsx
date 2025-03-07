@@ -1,9 +1,11 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Send, Mic, BrainCircuit, Smile, Frown, Meh, RefreshCw } from 'lucide-react';
+import { MessageSquare, Send, Mic, BrainCircuit, Smile, Frown, Meh, RefreshCw, SunMoon, Cloud, Snowflake, Coffee } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from "@/hooks/use-toast";
 
 // Types for our chat
 type Message = {
@@ -13,7 +15,7 @@ type Message = {
   timestamp: Date;
 };
 
-type MoodType = 'Happy' | 'Stressed' | 'Anxious' | 'Motivated' | 'Confused' | null;
+type MoodType = 'Happy' | 'Stressed' | 'Anxious' | 'Motivated' | 'Confused' | 'Tired' | 'Energetic' | 'Peaceful' | 'Creative' | null;
 
 // Personalized responses based on mood
 const moodResponses = {
@@ -25,7 +27,15 @@ const moodResponses = {
   
   Motivated: "That's amazing! I love hearing that you're feeling motivated today. Motivation is such a powerful energy - let's make the most of it! Would you like some tips to stay productive and focused? Or maybe you already have something specific you're excited to work on? Tell me more about what's driving your motivation today.",
   
-  Confused: "It's okay to feel this way. We all go through periods of confusion or uncertainty - it's actually part of growing and figuring things out. What's making you feel unsure today? Maybe talking through it could help bring some clarity, or we could explore some techniques for decision-making if you're facing a specific choice."
+  Confused: "It's okay to feel this way. We all go through periods of confusion or uncertainty - it's actually part of growing and figuring things out. What's making you feel unsure today? Maybe talking through it could help bring some clarity, or we could explore some techniques for decision-making if you're facing a specific choice.",
+  
+  Tired: "I can understand feeling tired. Our bodies and minds need rest, and sometimes life can be really demanding. Would you like to talk about your sleep habits or explore some energy-boosting techniques? Even small changes like a 5-minute stretch break or a glass of water can help. What might work best for you right now?",
+  
+  Energetic: "It's great that you're feeling energetic! That's a wonderful state to be in. What would you like to channel this energy into today? Perhaps there's a project you've been wanting to tackle, or maybe you'd enjoy some physical activity to make the most of this feeling?",
+  
+  Peaceful: "That sense of peace is so valuable. I'm glad you're experiencing it today. Would you like to explore ways to savor this feeling or perhaps share what's contributing to your sense of calm? Sometimes understanding what brings us peace can help us return to this state when we need it most.",
+  
+  Creative: "Feeling creative is such a special state of mind! Your imagination is active and ready to explore. Is there a creative project you've been wanting to work on? Or perhaps you'd like some prompts to help channel this creative energy? I'd love to hear more about how your creativity expresses itself."
 };
 
 // Conversation starters and questions for different topics
@@ -74,6 +84,21 @@ const conversationStarters = [
     id: 'safe-space',
     question: "Is there something on your mind that you need a safe space to talk about? You don't have to go through it alone.",
     followUp: "Thank you for trusting me with this. It takes courage to open up, and I'm here to listen without judgment. Would it help to explore this further or would you prefer some suggestions for managing this situation? Remember, many others have faced similar challenges - you're not alone in this experience."
+  },
+  {
+    id: 'future',
+    question: "If you could look five years into the future and see that everything worked out well, what would your life look like?",
+    followUp: "That's a beautiful vision! Visualizing a positive future can actually help guide us toward it. Are there small steps you could take today that would move you in the direction of that future? Even tiny actions can create momentum over time."
+  },
+  {
+    id: 'strength',
+    question: "What's a personal strength you have that you're proud of?",
+    followUp: "That's an wonderful strength to recognize in yourself! Our strengths are powerful resources we can lean on during challenging times. Can you think of a recent situation where this strength helped you or someone else? Reflecting on how we use our strengths can help us appreciate them even more."
+  },
+  {
+    id: 'helpful',
+    question: "What's the most helpful piece of advice someone has given you?",
+    followUp: "That's powerful advice. Isn't it amazing how the right words at the right time can make such a difference? Has this advice changed how you approach certain situations in your life? Sometimes wisdom from others becomes integrated into our own perspective in meaningful ways."
   }
 ];
 
@@ -81,7 +106,7 @@ export const AIChat = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hi there, I'm your AI well-being assistant. I'm here to provide support, guidance, or just a friendly chat. How are you feeling today?",
+      content: "Hi there, I'm your AI well-being assistant at MindMend. I'm here to provide support, guidance, or just have a friendly chat. How are you feeling today?",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -133,6 +158,12 @@ export const AIChat = () => {
         botResponse = "You're very welcome! I'm truly glad I could be helpful. Remember, I'm here anytime you want to talk, explore ideas, or just have someone to listen. Your wellbeing matters, and taking time for these conversations is an important part of self-care. Is there anything else you'd like to discuss or explore today?";
       } else if (inputValue.toLowerCase().includes('bye') || inputValue.toLowerCase().includes('goodbye')) {
         botResponse = "It was really nice chatting with you! Remember, I'm here whenever you need support, want to talk through something, or just need a friendly conversation. Take care of yourself, and I hope the rest of your day goes well. Don't hesitate to come back anytime - I'll be here!";
+      } else if (inputValue.toLowerCase().includes('hello') || inputValue.toLowerCase().includes('hi') || inputValue.toLowerCase().includes('hey')) {
+        botResponse = "Hello there! It's great to connect with you today. I'm your AI well-being assistant at MindMend. I'm here to chat about whatever's on your mind - whether that's mental health support, career questions, digital wellbeing, or just having a friendly conversation. How are you feeling today, and how can I support you?";
+      } else if (inputValue.toLowerCase().includes('who are you') || inputValue.toLowerCase().includes('what are you')) {
+        botResponse = "I'm your AI well-being assistant at MindMend. I'm designed to provide personalized support for your mental health, career growth, and digital wellbeing. I can offer a listening ear, helpful resources, guided exercises, or just friendly conversation - whatever would be most helpful for you right now. While I'm powered by AI and not a human or a replacement for professional help, I'm here to support your journey toward greater wellbeing in whatever way I can.";
+      } else if (inputValue.toLowerCase().includes('help') || inputValue.toLowerCase().includes('crisis')) {
+        botResponse = "I hear that you're looking for help, and reaching out is a really important first step. If you're experiencing a crisis or emergency situation, please connect with crisis support services like a local emergency number (911 in the US), Crisis Text Line (text HOME to 741741), or the National Suicide Prevention Lifeline (988). If you'd like to talk through what's happening, I'm here to listen. Would it help to share more about what's going on? I can also point you toward resources for specific concerns.";
       } else {
         // Use conversation starters for more varied responses
         const starter = conversationStarters[currentConversationIndex];
@@ -201,6 +232,13 @@ export const AIChat = () => {
       
       setMessages(prev => [...prev, botMessage]);
       setIsTyping(false);
+      
+      // Show toast notification
+      toast({
+        title: "Mood tracked",
+        description: `We've recorded that you're feeling ${selectedMood?.toLowerCase()} today.`,
+        duration: 3000,
+      });
     }, 1500);
   };
 
@@ -223,6 +261,31 @@ export const AIChat = () => {
       setMessages(prev => [...prev, botMessage]);
       setIsTyping(false);
     }, 1000);
+  };
+
+  const getMoodIcon = (moodType: MoodType) => {
+    switch(moodType) {
+      case 'Happy':
+        return <Smile className="h-4 w-4 text-green-500" />;
+      case 'Stressed':
+        return <Frown className="h-4 w-4 text-amber-500" />;
+      case 'Anxious':
+        return <Frown className="h-4 w-4 text-blue-500" />;
+      case 'Motivated':
+        return <Smile className="h-4 w-4 text-purple-500" />;
+      case 'Confused':
+        return <Meh className="h-4 w-4 text-slate-500" />;
+      case 'Tired':
+        return <Coffee className="h-4 w-4 text-brown-500" />;
+      case 'Energetic':
+        return <Smile className="h-4 w-4 text-yellow-500" />;
+      case 'Peaceful':
+        return <SunMoon className="h-4 w-4 text-blue-300" />;
+      case 'Creative':
+        return <Smile className="h-4 w-4 text-pink-500" />;
+      default:
+        return <Meh className="h-4 w-4 text-slate-500" />;
+    }
   };
 
   return (
@@ -260,7 +323,7 @@ export const AIChat = () => {
                       <BrainCircuit className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-medium">AI Well-Being Assistant</h3>
+                      <h3 className="font-medium">MindMend AI Assistant</h3>
                       <p className="text-xs text-slate-500">Online • Responds instantly</p>
                     </div>
                   </div>
@@ -311,6 +374,38 @@ export const AIChat = () => {
                           className="rounded-full flex items-center gap-1"
                         >
                           <Meh className="h-4 w-4 text-slate-500" /> Confused
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleMoodSelection('Tired')}
+                          className="rounded-full flex items-center gap-1"
+                        >
+                          <Coffee className="h-4 w-4 text-amber-700" /> Tired
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleMoodSelection('Energetic')}
+                          className="rounded-full flex items-center gap-1"
+                        >
+                          <Smile className="h-4 w-4 text-yellow-500" /> Energetic
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleMoodSelection('Peaceful')}
+                          className="rounded-full flex items-center gap-1"
+                        >
+                          <SunMoon className="h-4 w-4 text-blue-300" /> Peaceful
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleMoodSelection('Creative')}
+                          className="rounded-full flex items-center gap-1"
+                        >
+                          <Smile className="h-4 w-4 text-pink-500" /> Creative
                         </Button>
                       </div>
                     </div>
@@ -390,31 +485,18 @@ export const AIChat = () => {
                 <p className="text-slate-600 mb-6">Tracking your mood helps our AI provide better personalized support.</p>
                 
                 {!mood ? (
-                  <div className="grid grid-cols-3 gap-4">
-                    <Button 
-                      onClick={() => handleMoodSelection('Happy')}
-                      variant="outline" 
-                      className="flex flex-col items-center p-6 h-auto border-2 border-slate-200 hover:border-green-500 transition-colors"
-                    >
-                      <Smile className="h-10 w-10 text-green-500 mb-2" />
-                      <span>Happy</span>
-                    </Button>
-                    <Button 
-                      onClick={() => handleMoodSelection('Motivated')}
-                      variant="outline" 
-                      className="flex flex-col items-center p-6 h-auto border-2 border-slate-200 hover:border-blue-500 transition-colors"
-                    >
-                      <Meh className="h-10 w-10 text-blue-500 mb-2" />
-                      <span>Motivated</span>
-                    </Button>
-                    <Button 
-                      onClick={() => handleMoodSelection('Anxious')}
-                      variant="outline" 
-                      className="flex flex-col items-center p-6 h-auto border-2 border-slate-200 hover:border-purple-500 transition-colors"
-                    >
-                      <Frown className="h-10 w-10 text-purple-500 mb-2" />
-                      <span>Anxious</span>
-                    </Button>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                    {['Happy', 'Stressed', 'Anxious', 'Motivated', 'Confused', 'Tired', 'Energetic', 'Peaceful', 'Creative'].map((moodOption) => (
+                      <Button 
+                        key={moodOption}
+                        onClick={() => handleMoodSelection(moodOption as MoodType)}
+                        variant="outline" 
+                        className="flex flex-col items-center p-6 h-auto border-2 border-slate-200 hover:border-well-blue transition-colors"
+                      >
+                        {getMoodIcon(moodOption as MoodType)}
+                        <span className="mt-2">{moodOption}</span>
+                      </Button>
+                    ))}
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -453,21 +535,25 @@ export const AIChat = () => {
                   <div className="p-4 border border-slate-200 rounded-lg hover:border-well-blue transition-colors">
                     <h4 className="font-medium">Guided Meditation Sessions</h4>
                     <p className="text-sm text-slate-500">10+ sessions for stress, anxiety, and sleep</p>
+                    <Button className="mt-2" size="sm" variant="outline">Access Now</Button>
                   </div>
                   
                   <div className="p-4 border border-slate-200 rounded-lg hover:border-well-blue transition-colors">
                     <h4 className="font-medium">Crisis Helpline Directory</h4>
                     <p className="text-sm text-slate-500">24/7 support contacts for immediate help</p>
+                    <Button className="mt-2" size="sm" variant="outline">View Directory</Button>
                   </div>
                   
                   <div className="p-4 border border-slate-200 rounded-lg hover:border-well-blue transition-colors">
                     <h4 className="font-medium">Well-being Articles</h4>
                     <p className="text-sm text-slate-500">Expert-written content on mental health topics</p>
+                    <Button className="mt-2" size="sm" variant="outline">Read Articles</Button>
                   </div>
                   
                   <div className="p-4 border border-slate-200 rounded-lg hover:border-well-blue transition-colors">
                     <h4 className="font-medium">Self-assessment Tools</h4>
                     <p className="text-sm text-slate-500">Understand your mental health status</p>
+                    <Button className="mt-2" size="sm" variant="outline">Take Assessment</Button>
                   </div>
                 </div>
               </div>

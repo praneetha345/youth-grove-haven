@@ -2,8 +2,18 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Heart, BrainCircuit, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 export const Hero = () => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="pt-20 pb-32 overflow-hidden">
       <div className="container mx-auto px-6">
@@ -34,10 +44,19 @@ export const Hero = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-              <Button size="lg" className="bg-well-gradient hover:opacity-90 gap-2 px-6">
+              <Button 
+                size="lg" 
+                className="bg-well-gradient hover:opacity-90 gap-2 px-6 transition-transform duration-300 hover:scale-105"
+                onClick={() => scrollToSection('features')}
+              >
                 Get Started <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" className="gap-2 px-6">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="gap-2 px-6 transition-transform duration-300 hover:scale-105"
+                onClick={() => scrollToSection('mental-health')}
+              >
                 Talk to AI <BrainCircuit className="h-4 w-4" />
               </Button>
             </div>
@@ -55,23 +74,39 @@ export const Hero = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <div className="relative">
-              <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-200 rounded-full filter blur-3xl opacity-30 animate-pulse-light"></div>
-              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-purple-300 rounded-full filter blur-3xl opacity-30 animate-pulse-light"></div>
+              <motion.div 
+                className="absolute -top-10 -left-10 w-40 h-40 bg-blue-200 rounded-full filter blur-3xl opacity-30"
+                animate={{ scale: isHovered ? 1.2 : 1 }}
+                transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+              ></motion.div>
+              <motion.div 
+                className="absolute -bottom-10 -right-10 w-40 h-40 bg-purple-300 rounded-full filter blur-3xl opacity-30"
+                animate={{ scale: isHovered ? 1 : 1.2 }}
+                transition={{ duration: 1.3, repeat: Infinity, repeatType: "reverse" }}
+              ></motion.div>
               
-              <div className="relative glass-card overflow-hidden rounded-2xl border border-slate-200 shadow-lg">
+              <div 
+                className="relative glass-card overflow-hidden rounded-2xl border border-slate-200 shadow-lg transition-all duration-300 hover:shadow-xl"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+              >
                 <div className="p-6 sm:p-10">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-full bg-well-gradient flex items-center justify-center">
                       <BrainCircuit className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-medium">AI Well-Being Assistant</h3>
+                      <h3 className="font-medium">MindMend AI Assistant</h3>
                       <p className="text-xs text-slate-500">Personal, empathetic support</p>
                     </div>
                   </div>
                   
                   <div className="space-y-4 mb-4">
-                    <div className="bg-white/70 rounded-lg p-4 shadow-sm border border-slate-100">
+                    <motion.div 
+                      className="bg-white/70 rounded-lg p-4 shadow-sm border border-slate-100"
+                      animate={{ y: isHovered ? -5 : 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
                       <p className="text-slate-600">How are you feeling today?</p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {["Happy", "Stressed", "Anxious", "Motivated", "Confused"].map((mood) => (
@@ -79,17 +114,22 @@ export const Hero = () => {
                             key={mood}
                             variant="outline"
                             size="sm"
+                            onClick={() => scrollToSection('mental-health')}
                             className="rounded-full bg-white hover:bg-slate-50"
                           >
                             {mood}
                           </Button>
                         ))}
                       </div>
-                    </div>
+                    </motion.div>
                     
-                    <div className="bg-well-blue/10 rounded-lg p-4 border border-well-blue/20 text-slate-700">
+                    <motion.div 
+                      className="bg-well-blue/10 rounded-lg p-4 border border-well-blue/20 text-slate-700"
+                      animate={{ y: isHovered ? 5 : 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
                       <p>I'm here for you. Would you like to talk about what's making you feel this way?</p>
-                    </div>
+                    </motion.div>
                   </div>
                   
                   <div className="relative">
@@ -97,11 +137,13 @@ export const Hero = () => {
                       type="text"
                       placeholder="Type your response..."
                       className="w-full rounded-full border border-slate-200 px-4 py-2.5 pr-10 focus:border-blue-400 focus:ring-blue-400 text-sm"
+                      onClick={() => scrollToSection('mental-health')}
                     />
                     <Button
                       size="icon"
                       variant="ghost"
                       className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-well-blue"
+                      onClick={() => scrollToSection('mental-health')}
                     >
                       <ArrowRight className="h-4 w-4" />
                     </Button>
