@@ -125,6 +125,7 @@ export const CareerGrowth = () => {
   const [courses, setCourses] = useState(coursesData);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState(''); // Add the missing state variable
   const [resumeData, setResumeData] = useState({
     firstName: '',
     lastName: '',
