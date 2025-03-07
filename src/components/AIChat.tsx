@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Send, Mic, BrainCircuit, Smile, Frown, Meh } from 'lucide-react';
+import { MessageSquare, Send, Mic, BrainCircuit, Smile, Frown, Meh, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Types for our chat
@@ -17,31 +17,71 @@ type MoodType = 'Happy' | 'Stressed' | 'Anxious' | 'Motivated' | 'Confused' | nu
 
 // Personalized responses based on mood
 const moodResponses = {
-  Happy: "That's wonderful to hear! Let's build on that positive energy today. Would you like to explore some activities that could enhance your mood further?",
-  Stressed: "I'm here for you. Do you want to talk about what's causing your stress? You can vent or just tell me a little about what's on your mind.",
-  Anxious: "I understand how anxiety can feel. Would you like to try a quick grounding exercise? Look around and name three things you see, two things you can touch, and one thing you hear.",
-  Motivated: "That's amazing! Keep up the energy. Would you like some tips to stay productive and focused?",
-  Confused: "It's okay to feel this way. We all go through it. What's making you feel unsure today?"
+  Happy: "That's wonderful to hear! It's great that you're feeling positive today. Let's build on that good energy. Would you like to explore some activities that could enhance your mood further? Maybe a short gratitude exercise or sharing your positivity with someone else today?",
+  
+  Stressed: "I'm here for you. Stress can be really overwhelming, and it's completely normal to feel this way. Would you like to talk about what's causing your stress? You can vent or just tell me a little about what's on your mind. Sometimes just putting it into words can help lighten the mental load. Or we could try a quick breathing exercise if you prefer?",
+  
+  Anxious: "I understand how anxiety can feel. That tightness in your chest, racing thoughts - it's a lot to handle. Would you like to try a quick grounding exercise? Look around and name three things you see, two things you can touch, and one thing you hear. This can help bring you back to the present moment. Remember, you're not alone in this feeling, and it will pass.",
+  
+  Motivated: "That's amazing! I love hearing that you're feeling motivated today. Motivation is such a powerful energy - let's make the most of it! Would you like some tips to stay productive and focused? Or maybe you already have something specific you're excited to work on? Tell me more about what's driving your motivation today.",
+  
+  Confused: "It's okay to feel this way. We all go through periods of confusion or uncertainty - it's actually part of growing and figuring things out. What's making you feel unsure today? Maybe talking through it could help bring some clarity, or we could explore some techniques for decision-making if you're facing a specific choice."
 };
 
-// Other interactive prompts
+// Conversation starters and questions for different topics
 const conversationStarters = [
-  "What's one thing that made you smile today?",
-  "Let's try a quick grounding exercise. Look around and name three things you see, two things you can touch, and one thing you hear.",
-  "Would you like to try a guided breathing exercise? It only takes a minute and can help you feel more relaxed.",
-  "What's something you've always been curious about learning?",
-  "What's something you've achieved recently, no matter how small?",
-  "How do you feel after scrolling through social media?",
-  "Here's a quote for you: 'No matter how slow you go, you're still lapping everyone on the couch.' How does this make you feel?",
-  "Do you want a small challenge today? Something simple like drinking more water, stretching for five minutes, or writing down one thing you're grateful for?",
-  "Is there something on your mind that you need a safe space to talk about? You don't have to go through it alone."
+  {
+    id: 'smile',
+    question: "What's one thing that made you smile today?",
+    followUp: "Even small moments of joy are worth celebrating! Would you like to talk more about this positive experience or explore ways to create more moments like this?"
+  },
+  {
+    id: 'grounding',
+    question: "Let's try a quick grounding exercise. Look around and name three things you see, two things you can touch, and one thing you hear.",
+    followUp: "That's great! How are you feeling now? Grounding exercises like this can really help when your mind feels scattered or anxious. They bring you back to the present moment."
+  },
+  {
+    id: 'breathing',
+    question: "Would you like to try a guided breathing exercise? It only takes a minute and can help you feel more relaxed.",
+    followUp: "Perfect. Let's do this together. Breathe in slowly through your nose for 4 counts... hold for 2... and out through your mouth for 6. Let's repeat that 3 more times. How are you feeling now? Even just a few deep breaths can shift your nervous system."
+  },
+  {
+    id: 'learning',
+    question: "What's something you've always been curious about learning?",
+    followUp: "That sounds fascinating! Learning new things not only expands our skills but can also boost happiness and confidence. Have you taken any steps toward exploring this interest yet? I'd be happy to suggest some resources or first steps if you'd like."
+  },
+  {
+    id: 'achievement',
+    question: "What's something you've achieved recently, no matter how small?",
+    followUp: "That's definitely worth celebrating! We often focus so much on our big goals that we forget to acknowledge the small wins along the way. How did accomplishing this make you feel? Those feelings of satisfaction and pride are important to recognize."
+  },
+  {
+    id: 'social-media',
+    question: "How do you feel after scrolling through social media?",
+    followUp: "Many people notice that too. Our relationship with social media can significantly impact our mental well-being. Have you ever tried setting boundaries with your social media use? Even small changes like no-phone zones or time limits can make a big difference in how we feel."
+  },
+  {
+    id: 'motivation',
+    question: "Here's a quote for you: 'No matter how slow you go, you're still lapping everyone on the couch.' How does this make you feel?",
+    followUp: "I appreciate you sharing that reaction. Quotes can be powerful reminders when we need a shift in perspective. Is there a particular area in your life where you feel this resonates most? Perhaps your studies, fitness journey, or a personal project?"
+  },
+  {
+    id: 'challenge',
+    question: "Do you want a small challenge today? Something simple like drinking more water, stretching for five minutes, or writing down one thing you're grateful for?",
+    followUp: "Excellent choice! Small, consistent actions often lead to the biggest changes over time. Would you like me to check in with you later about how it went? Sometimes a bit of accountability can help us follow through on our intentions."
+  },
+  {
+    id: 'safe-space',
+    question: "Is there something on your mind that you need a safe space to talk about? You don't have to go through it alone.",
+    followUp: "Thank you for trusting me with this. It takes courage to open up, and I'm here to listen without judgment. Would it help to explore this further or would you prefer some suggestions for managing this situation? Remember, many others have faced similar challenges - you're not alone in this experience."
+  }
 ];
 
 export const AIChat = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hi there, I'm your AI well-being assistant. How are you feeling today?",
+      content: "Hi there, I'm your AI well-being assistant. I'm here to provide support, guidance, or just a friendly chat. How are you feeling today?",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -51,6 +91,7 @@ export const AIChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [mood, setMood] = useState<MoodType>(null);
   const [showMoodPrompt, setShowMoodPrompt] = useState(true);
+  const [currentConversationIndex, setCurrentConversationIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Auto-scroll to bottom of messages
@@ -79,16 +120,37 @@ export const AIChat = () => {
     setTimeout(() => {
       let botResponse: string;
       
-      // Simple logic for response selection
+      // More sophisticated response selection
       if (inputValue.toLowerCase().includes('anxious') || inputValue.toLowerCase().includes('anxiety')) {
-        botResponse = "It's completely normal to feel anxious sometimes. Would you like to try a quick breathing exercise to help calm your mind?";
-      } else if (inputValue.toLowerCase().includes('career') || inputValue.toLowerCase().includes('job')) {
-        botResponse = "Thinking about your career path is important. Would you like me to help you explore some options or discuss your current challenges?";
-      } else if (inputValue.toLowerCase().includes('social media') || inputValue.toLowerCase().includes('phone')) {
-        botResponse = "Digital balance is essential for wellbeing. Would you be interested in trying a short digital detox challenge?";
+        botResponse = "It sounds like you're experiencing some anxiety. That's something many people deal with, and it can be really challenging. Let's talk about it - what specifically is making you feel anxious right now? Sometimes just naming what's bothering us can help reduce its power. Would you also be interested in trying a quick breathing exercise? I'm here to support you however would be most helpful.";
+      } else if (inputValue.toLowerCase().includes('sad') || inputValue.toLowerCase().includes('depress')) {
+        botResponse = "I'm sorry to hear you're feeling down. These feelings are valid, and I appreciate you sharing them with me. Would you like to talk more about what's contributing to these feelings? Sometimes expressing our thoughts can help us process them better. Remember that it's okay to not be okay sometimes, and reaching out - like you're doing now - is a positive step. Would it help to explore some mood-lifting activities or resources for additional support?";
+      } else if (inputValue.toLowerCase().includes('career') || inputValue.toLowerCase().includes('job') || inputValue.toLowerCase().includes('work')) {
+        botResponse = "Career questions and challenges are something many young people navigate. Whether you're just starting out, considering a change, or feeling stuck, these thoughts are completely normal. Would you like to explore some options together? We could talk about your interests, skills you'd like to develop, or maybe break down a specific career challenge you're facing. Career paths rarely look like straight lines - they're more like winding journeys of growth and discovery.";
+      } else if (inputValue.toLowerCase().includes('social media') || inputValue.toLowerCase().includes('phone') || inputValue.toLowerCase().includes('screen')) {
+        botResponse = "Our relationship with technology can definitely impact our wellbeing. Many people find themselves feeling drained after too much screen time or social media scrolling. Have you noticed specific patterns in how digital use affects your mood or energy? We could explore some ways to create healthier boundaries with your devices - maybe a screen-free hour before bed, or designated tech breaks throughout the day. What do you think might work best for your lifestyle?";
+      } else if (inputValue.toLowerCase().includes('thank')) {
+        botResponse = "You're very welcome! I'm truly glad I could be helpful. Remember, I'm here anytime you want to talk, explore ideas, or just have someone to listen. Your wellbeing matters, and taking time for these conversations is an important part of self-care. Is there anything else you'd like to discuss or explore today?";
+      } else if (inputValue.toLowerCase().includes('bye') || inputValue.toLowerCase().includes('goodbye')) {
+        botResponse = "It was really nice chatting with you! Remember, I'm here whenever you need support, want to talk through something, or just need a friendly conversation. Take care of yourself, and I hope the rest of your day goes well. Don't hesitate to come back anytime - I'll be here!";
       } else {
-        // Choose a random starter
-        botResponse = conversationStarters[Math.floor(Math.random() * conversationStarters.length)];
+        // Use conversation starters for more varied responses
+        const starter = conversationStarters[currentConversationIndex];
+        
+        // If it seems like a response to our previous question, give a follow-up
+        const lastBotMessage = messages.filter(m => m.sender === 'bot').pop();
+        if (lastBotMessage && conversationStarters.some(s => lastBotMessage.content.includes(s.question))) {
+          const matchingStarter = conversationStarters.find(s => lastBotMessage.content.includes(s.question));
+          if (matchingStarter) {
+            botResponse = matchingStarter.followUp;
+          } else {
+            botResponse = starter.followUp;
+          }
+        } else {
+          // Otherwise ask a new question
+          botResponse = starter.question;
+          setCurrentConversationIndex((currentConversationIndex + 1) % conversationStarters.length);
+        }
       }
       
       const botMessage: Message = {
@@ -147,7 +209,9 @@ export const AIChat = () => {
     setIsTyping(true);
     
     setTimeout(() => {
-      const randomTopic = conversationStarters[Math.floor(Math.random() * conversationStarters.length)];
+      const randomIndex = Math.floor(Math.random() * conversationStarters.length);
+      const randomTopic = conversationStarters[randomIndex].question;
+      setCurrentConversationIndex(randomIndex);
       
       const botMessage: Message = {
         id: Date.now().toString(),
@@ -296,9 +360,9 @@ export const AIChat = () => {
                       variant="ghost" 
                       size="sm" 
                       onClick={handleNewTopic}
-                      className="text-slate-500"
+                      className="text-slate-500 flex items-center gap-1"
                     >
-                      New Topic
+                      <RefreshCw className="h-3 w-3 mr-1" /> New Topic
                     </Button>
                     <div className="flex-1 flex space-x-2">
                       <Input
