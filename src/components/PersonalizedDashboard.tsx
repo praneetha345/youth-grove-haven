@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   LineChart, 
@@ -14,7 +13,8 @@ import {
   ArrowUp,
   ArrowDown,
   Info,
-  Pen
+  Pen,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -31,6 +31,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
@@ -50,8 +60,10 @@ export const PersonalizedDashboard = () => {
   const [showJournalDialog, setShowJournalDialog] = useState(false);
   const [journalEntryText, setJournalEntryText] = useState("");
   const [selectedMood, setSelectedMood] = useState<'positive' | 'neutral' | 'negative'>('positive');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState<number | null>(null);
+  const [showAllEntries, setShowAllEntries] = useState(false);
   
-  // Get journal entries from localStorage or use defaults
   const getStoredEntries = () => {
     if (typeof window === 'undefined') return [];
     
@@ -78,7 +90,6 @@ export const PersonalizedDashboard = () => {
   
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(getStoredEntries);
   
-  // Save entries to localStorage when they change
   useEffect(() => {
     localStorage.setItem('journalEntries', JSON.stringify(journalEntries));
   }, [journalEntries]);
@@ -112,6 +123,25 @@ export const PersonalizedDashboard = () => {
     toast({
       title: "Journal Entry Added",
       description: "Your journal entry has been saved successfully.",
+    });
+  };
+  
+  const handleDeleteEntry = (id: number) => {
+    setEntryToDelete(id);
+    setShowDeleteDialog(true);
+  };
+  
+  const confirmDeleteEntry = () => {
+    if (entryToDelete === null) return;
+    
+    const updatedEntries = journalEntries.filter(entry => entry.id !== entryToDelete);
+    setJournalEntries(updatedEntries);
+    setShowDeleteDialog(false);
+    setEntryToDelete(null);
+    
+    toast({
+      title: "Entry Deleted",
+      description: "Your journal entry has been deleted.",
     });
   };
   
@@ -362,16 +392,26 @@ export const PersonalizedDashboard = () => {
                     
                     {journalEntries.length > 0 ? (
                       <div className="space-y-3">
-                        {journalEntries.slice(0, 3).map((entry) => (
+                        {(showAllEntries ? journalEntries : journalEntries.slice(0, 3)).map((entry) => (
                           <div key={entry.id} className="bg-slate-50 rounded-lg p-3 border border-slate-100">
                             <p className="text-sm text-slate-600 italic">
                               "{entry.text}"
                             </p>
                             <div className="flex justify-between mt-2">
                               <span className="text-xs text-slate-400">{entry.timestamp}</span>
-                              <div className="flex items-center gap-1">
-                                {getMoodIcon(entry.mood)}
-                                {getMoodText(entry.mood)}
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1">
+                                  {getMoodIcon(entry.mood)}
+                                  {getMoodText(entry.mood)}
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-5 w-5 text-slate-400 hover:text-red-500"
+                                  onClick={() => handleDeleteEntry(entry.id)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
                               </div>
                             </div>
                           </div>
@@ -379,8 +419,13 @@ export const PersonalizedDashboard = () => {
                         
                         {journalEntries.length > 3 && (
                           <div className="text-center pt-2">
-                            <Button variant="ghost" size="sm" className="text-sm text-slate-500">
-                              See all entries
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-sm text-slate-500"
+                              onClick={() => setShowAllEntries(!showAllEntries)}
+                            >
+                              {showAllEntries ? "Show less" : "See all entries"}
                             </Button>
                           </div>
                         )}
@@ -438,63 +483,5 @@ export const PersonalizedDashboard = () => {
         </div>
       </div>
       
-      {/* Journal Entry Dialog */}
-      <Dialog open={showJournalDialog} onOpenChange={setShowJournalDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Write Journal Entry</DialogTitle>
-            <DialogDescription>
-              Share your thoughts, feelings, and experiences. Your entries help our AI better understand and support your well-being journey.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 mt-4">
-            <Textarea 
-              placeholder="How are you feeling today? What's on your mind?"
-              className="min-h-[150px]"
-              value={journalEntryText}
-              onChange={(e) => setJournalEntryText(e.target.value)}
-            />
-            
-            <div>
-              <label className="text-sm font-medium mb-2 block">How are you feeling?</label>
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant={selectedMood === 'positive' ? 'default' : 'outline'}
-                  className={selectedMood === 'positive' ? 'bg-green-600 hover:bg-green-700' : ''}
-                  onClick={() => setSelectedMood('positive')}
-                >
-                  <Smile className="mr-2 h-4 w-4" />
-                  Good
-                </Button>
-                <Button
-                  type="button"
-                  variant={selectedMood === 'neutral' ? 'default' : 'outline'}
-                  className={selectedMood === 'neutral' ? 'bg-amber-600 hover:bg-amber-700' : ''}
-                  onClick={() => setSelectedMood('neutral')}
-                >
-                  <Meh className="mr-2 h-4 w-4" />
-                  Neutral
-                </Button>
-                <Button
-                  type="button"
-                  variant={selectedMood === 'negative' ? 'default' : 'outline'}
-                  className={selectedMood === 'negative' ? 'bg-red-600 hover:bg-red-700' : ''}
-                  onClick={() => setSelectedMood('negative')}
-                >
-                  <Frown className="mr-2 h-4 w-4" />
-                  Not Good
-                </Button>
-              </div>
-            </div>
-            
-            <div className="flex justify-end pt-2">
-              <Button onClick={handleJournalSubmit}>Save Entry</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </section>
-  );
-};
+      <
+
