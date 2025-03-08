@@ -7,7 +7,6 @@ import {
   Award, 
   Check, 
   ChevronRight,
-  ChevronUp,
   Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,15 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
-
-type Challenge = {
-  id: number;
-  title: string;
-  description: string;
-  status: 'active' | 'join' | 'completed';
-  participants: number;
-  progress: string;
-}
 
 export const DigitalDetox = () => {
   // Load saved settings from localStorage or use defaults
@@ -37,113 +27,18 @@ export const DigitalDetox = () => {
   const [screenTime, setScreenTime] = useState(() => getSavedSettings()?.screenTime || 5);
   const [detoxGoal, setDetoxGoal] = useState(() => getSavedSettings()?.detoxGoal || 3);
   const [appLimit, setAppLimit] = useState(() => getSavedSettings()?.appLimit || "Instagram");
-  const [showAllChallenges, setShowAllChallenges] = useState(false);
   
-  // Initial challenges
-  const initialChallenges: Challenge[] = [
-    {
-      id: 1,
-      title: "Mindful Morning",
-      description: "No phone for first hour after waking",
-      status: 'active',
-      participants: 5,
-      progress: "Day 3/7"
-    },
-    {
-      id: 2,
-      title: "Social Media Cleanse",
-      description: "72 hours without social media apps",
-      status: 'join',
-      participants: 10,
-      progress: "Starts in 2 days"
-    },
-    {
-      id: 3,
-      title: "No-Phone Meal Times",
-      description: "Eat without screen distractions",
-      status: 'join',
-      participants: 6,
-      progress: "Ongoing"
-    },
-    {
-      id: 4,
-      title: "Digital Sabbath",
-      description: "One full day without screens each week",
-      status: 'join',
-      participants: 8,
-      progress: "Starts this weekend"
-    },
-    {
-      id: 5,
-      title: "App Detox Challenge",
-      description: "Delete your most distracting app for 5 days",
-      status: 'join',
-      participants: 12,
-      progress: "Ongoing"
-    },
-    {
-      id: 6,
-      title: "Notification Silence",
-      description: "Turn off all non-essential notifications",
-      status: 'join',
-      participants: 15,
-      progress: "Join anytime"
-    }
-  ];
-
-  // Get challenges from localStorage or use defaults
-  const getStoredChallenges = () => {
-    if (typeof window === 'undefined') return initialChallenges;
-    
-    const savedChallenges = localStorage.getItem('digitalDetoxChallenges');
-    return savedChallenges ? JSON.parse(savedChallenges) : initialChallenges;
-  };
-
-  const [challenges, setChallenges] = useState<Challenge[]>(getStoredChallenges);
-  
-  // Save all settings when they change
+  // Save settings when they change
   useEffect(() => {
     const settings = { screenTime, detoxGoal, appLimit };
     localStorage.setItem('digitalDetoxSettings', JSON.stringify(settings));
-    localStorage.setItem('digitalDetoxChallenges', JSON.stringify(challenges));
-  }, [screenTime, detoxGoal, appLimit, challenges]);
+  }, [screenTime, detoxGoal, appLimit]);
   
   const saveGoals = () => {
     toast({
       title: "Goals Saved!",
       description: `Your daily screen time goal is now ${detoxGoal} hours with focus on limiting ${appLimit}.`,
     });
-  };
-
-  const toggleChallengeStatus = (id: number) => {
-    setChallenges(prev => prev.map(challenge => {
-      if (challenge.id === id) {
-        let newStatus: 'active' | 'join' | 'completed';
-        
-        if (challenge.status === 'join') newStatus = 'active';
-        else if (challenge.status === 'active') newStatus = 'completed';
-        else newStatus = 'join';
-        
-        return {...challenge, status: newStatus};
-      }
-      return challenge;
-    }));
-    
-    // Show toast based on new status
-    const challenge = challenges.find(c => c.id === id);
-    if (challenge) {
-      if (challenge.status === 'join') {
-        toast({
-          title: "Challenge Joined!",
-          description: `You've joined the "${challenge.title}" challenge.`,
-        });
-      } else if (challenge.status === 'active') {
-        toast({
-          title: "Challenge Completed!",
-          description: `Congratulations on completing the "${challenge.title}" challenge!`,
-        });
-      }
-    }
   };
 
   return (
@@ -276,63 +171,72 @@ export const DigitalDetox = () => {
               </h3>
               
               <div className="space-y-5">
-                {challenges.slice(0, showAllChallenges ? challenges.length : 3).map((challenge) => (
-                  <div key={challenge.id} className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-medium text-slate-800">{challenge.title}</h4>
-                        <p className="text-sm text-slate-500">{challenge.description}</p>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          challenge.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : challenge.status === 'completed'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-slate-100 text-slate-600'
-                        }`}
-                        onClick={() => toggleChallengeStatus(challenge.id)}
-                      >
-                        {challenge.status === 'active' 
-                          ? 'Active' 
-                          : challenge.status === 'completed' 
-                            ? 'Completed' 
-                            : 'Join'
-                        }
-                      </Button>
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-medium">Mindful Morning</h4>
+                      <p className="text-sm text-slate-500">No phone for first hour after waking</p>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <div className="flex -space-x-2">
-                          <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">
-                            {challenge.id === 1 ? 'S' : challenge.id === 2 ? 'J' : 'A'}
-                          </div>
-                          <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">
-                            {challenge.id === 1 ? 'T' : challenge.id === 2 ? 'K' : 'M'}
-                          </div>
-                          <div className="w-6 h-6 rounded-full bg-well-blue text-white flex items-center justify-center text-xs">
-                            +{challenge.participants - 2}
-                          </div>
-                        </div>
-                        <span>{challenge.participants} participants</span>
-                      </div>
-                      <div className="text-xs font-medium text-slate-600">{challenge.progress}</div>
-                    </div>
+                    <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Active</div>
                   </div>
-                ))}
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <div className="flex -space-x-2">
+                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">S</div>
+                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">T</div>
+                        <div className="w-6 h-6 rounded-full bg-well-blue text-white flex items-center justify-center text-xs">+3</div>
+                      </div>
+                      <span>5 participants</span>
+                    </div>
+                    <div className="text-xs font-medium text-well-blue">Day 3/7</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-lg p-4 border border-slate-200">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-medium">Social Media Cleanse</h4>
+                      <p className="text-sm text-slate-500">72 hours without social media apps</p>
+                    </div>
+                    <div className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded-full">Join</div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <div className="flex -space-x-2">
+                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">J</div>
+                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">K</div>
+                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">+8</div>
+                      </div>
+                      <span>10 participants</span>
+                    </div>
+                    <div className="text-xs font-medium text-slate-600">Starts in 2 days</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-lg p-4 border border-slate-200">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-medium">No-Phone Meal Times</h4>
+                      <p className="text-sm text-slate-500">Eat without screen distractions</p>
+                    </div>
+                    <div className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded-full">Join</div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <div className="flex -space-x-2">
+                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">A</div>
+                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">M</div>
+                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">+4</div>
+                      </div>
+                      <span>6 participants</span>
+                    </div>
+                    <div className="text-xs font-medium text-slate-600">Ongoing</div>
+                  </div>
+                </div>
                 
                 <div className="pt-2">
-                  <Button 
-                    variant="outline" 
-                    className="w-full gap-1 text-slate-800" 
-                    onClick={() => setShowAllChallenges(!showAllChallenges)}
-                  >
-                    {showAllChallenges ? (
-                      <>See fewer challenges <ChevronUp className="h-4 w-4" /></>
-                    ) : (
-                      <>See all challenges <ChevronRight className="h-4 w-4" /></>
-                    )}
+                  <Button variant="outline" className="w-full gap-1">
+                    See all challenges <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
