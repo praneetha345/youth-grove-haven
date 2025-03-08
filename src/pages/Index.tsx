@@ -16,10 +16,31 @@ const Index = () => {
   // Set page title
   useEffect(() => {
     document.title = "MindMend - Your AI Wellness Companion";
+    
+    // Add CSS to ensure text is always visible in light mode
+    const style = document.createElement('style');
+    style.textContent = `
+      body {
+        color: #1e293b !important; /* slate-800 to ensure text is visible */
+      }
+      
+      .text-white {
+        color: white !important;
+      }
+      
+      h1, h2, h3, h4, h5, h6, p, span, div {
+        color: inherit;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen text-slate-800">
       <Navbar />
       <Hero />
       <Features />
