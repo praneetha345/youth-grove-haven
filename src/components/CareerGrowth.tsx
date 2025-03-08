@@ -16,18 +16,13 @@ import {
   Filter,
   Download,
   Upload,
-  Trash2,
-  Globe,
-  Code,
-  PenTool,
-  BarChart,
-  Headphones,
-  Monitor
+  Trash2
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "@/components/ui/use-toast";
 import { motion } from 'framer-motion';
 
+// Mock job data
 const jobsData = [
   {
     id: 1,
@@ -39,8 +34,7 @@ const jobsData = [
     postedDate: "2 days ago",
     skills: ["UI Design", "User Research", "Figma", "Prototyping"],
     featured: true,
-    aiMatch: 92,
-    category: "Design"
+    aiMatch: 92
   },
   {
     id: 2,
@@ -52,8 +46,7 @@ const jobsData = [
     postedDate: "1 week ago",
     skills: ["React", "JavaScript", "CSS", "HTML5", "TypeScript"],
     featured: false,
-    aiMatch: 87,
-    category: "Development"
+    aiMatch: 87
   },
   {
     id: 3,
@@ -65,8 +58,7 @@ const jobsData = [
     postedDate: "3 days ago",
     skills: ["SQL", "Excel", "Data Visualization", "Statistics"],
     featured: false,
-    aiMatch: 95,
-    category: "Data"
+    aiMatch: 95
   },
   {
     id: 4,
@@ -78,63 +70,11 @@ const jobsData = [
     postedDate: "Just now",
     skills: ["Content Strategy", "Video Editing", "Social Media", "Storytelling"],
     featured: true,
-    aiMatch: 89,
-    category: "Marketing"
-  },
-  {
-    id: 5,
-    title: "Product Manager",
-    company: "Innovative Solutions",
-    location: "Seattle, WA",
-    salary: "$95,000 - $120,000",
-    type: "Full-time",
-    postedDate: "3 days ago",
-    skills: ["Product Strategy", "Agile", "User Stories", "Roadmapping", "Analytics"],
-    featured: true,
-    aiMatch: 93,
-    category: "Product"
-  },
-  {
-    id: 6,
-    title: "DevOps Engineer",
-    company: "Cloud Systems Inc.",
-    location: "Remote",
-    salary: "$90,000 - $115,000",
-    type: "Full-time",
-    postedDate: "5 days ago",
-    skills: ["Docker", "Kubernetes", "CI/CD", "AWS", "Terraform"],
-    featured: false,
-    aiMatch: 88,
-    category: "Development"
-  },
-  {
-    id: 7,
-    title: "Marketing Specialist",
-    company: "Global Reach Enterprises",
-    location: "Chicago, IL",
-    salary: "$60,000 - $75,000",
-    type: "Full-time",
-    postedDate: "1 week ago",
-    skills: ["Digital Marketing", "SEO", "Content Strategy", "Analytics", "Social Media"],
-    featured: false,
-    aiMatch: 91,
-    category: "Marketing"
-  },
-  {
-    id: 8,
-    title: "Backend Developer",
-    company: "Server Solutions",
-    location: "Austin, TX",
-    salary: "$85,000 - $110,000",
-    type: "Full-time",
-    postedDate: "Just now",
-    skills: ["Node.js", "Python", "MongoDB", "API Design", "GraphQL"],
-    featured: true,
-    aiMatch: 94,
-    category: "Development"
+    aiMatch: 89
   }
 ];
 
+// Mock skill courses
 const coursesData = [
   {
     id: 1,
@@ -394,22 +334,6 @@ export const CareerGrowth = () => {
     });
   };
   
-  const filterJobsByCategory = (category: string) => {
-    if (activeFilters.includes(category)) {
-      setActiveFilters(activeFilters.filter(f => f !== category));
-      setJobs(jobsData);
-    } else {
-      setActiveFilters([...activeFilters.filter(f => !jobsData.map(job => job.category).includes(f)), category]);
-      const filteredJobs = jobsData.filter(job => job.category === category);
-      setJobs(filteredJobs);
-      
-      toast({
-        title: "Category Filter Applied",
-        description: `Showing ${category} jobs`,
-      });
-    }
-  };
-  
   return (
     <section className="py-20 bg-white" id="career">
       <div className="container mx-auto px-6">
@@ -449,25 +373,7 @@ export const CareerGrowth = () => {
                         className="pl-10"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            if (searchQuery) {
-                              const filteredJobs = jobsData.filter(job => 
-                                job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()))
-                              );
-                              setJobs(filteredJobs);
-                              
-                              toast({
-                                title: "Search Results",
-                                description: `Found ${filteredJobs.length} jobs matching "${searchQuery}"`,
-                              });
-                            } else {
-                              setJobs(jobsData);
-                            }
-                          }
-                        }}
+                        onKeyDown={handleSearchKeyDown}
                       />
                     </div>
                     <Popover>
@@ -482,28 +388,28 @@ export const CareerGrowth = () => {
                           <div className="flex flex-col gap-2">
                             <Badge 
                               variant={activeFilters.includes('Remote') ? "default" : "outline"}
-                              className="cursor-pointer justify-start bg-well-blue text-white hover:bg-well-blue/90"
+                              className="cursor-pointer justify-start"
                               onClick={() => toggleFilter('Remote')}
                             >
                               Remote
                             </Badge>
                             <Badge 
                               variant={activeFilters.includes('Full-time') ? "default" : "outline"}
-                              className="cursor-pointer justify-start bg-well-purple text-white hover:bg-well-purple/90"
+                              className="cursor-pointer justify-start"
                               onClick={() => toggleFilter('Full-time')}
                             >
                               Full-time
                             </Badge>
                             <Badge 
                               variant={activeFilters.includes('Internship') ? "default" : "outline"}
-                              className="cursor-pointer justify-start bg-well-teal text-white hover:bg-well-teal/90"
+                              className="cursor-pointer justify-start"
                               onClick={() => toggleFilter('Internship')}
                             >
                               Internship
                             </Badge>
                             <Badge 
                               variant={activeFilters.includes('Contract') ? "default" : "outline"}
-                              className="cursor-pointer justify-start bg-well-pink text-white hover:bg-well-pink/90"
+                              className="cursor-pointer justify-start"
                               onClick={() => toggleFilter('Contract')}
                             >
                               Contract
@@ -515,60 +421,12 @@ export const CareerGrowth = () => {
                   </div>
                 </div>
                 
-                <div className="mb-6">
-                  <h4 className="font-medium mb-3">Job Categories</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge 
-                      variant={activeFilters.includes('Development') ? "default" : "outline"}
-                      className="cursor-pointer bg-blue-500 text-white hover:bg-blue-600"
-                      onClick={() => filterJobsByCategory('Development')}
-                    >
-                      <Code className="h-3 w-3 mr-1" /> Development
-                    </Badge>
-                    <Badge 
-                      variant={activeFilters.includes('Design') ? "default" : "outline"}
-                      className="cursor-pointer bg-purple-500 text-white hover:bg-purple-600"
-                      onClick={() => filterJobsByCategory('Design')}
-                    >
-                      <PenTool className="h-3 w-3 mr-1" /> Design
-                    </Badge>
-                    <Badge 
-                      variant={activeFilters.includes('Data') ? "default" : "outline"}
-                      className="cursor-pointer bg-green-500 text-white hover:bg-green-600"
-                      onClick={() => filterJobsByCategory('Data')}
-                    >
-                      <BarChart className="h-3 w-3 mr-1" /> Data
-                    </Badge>
-                    <Badge 
-                      variant={activeFilters.includes('Marketing') ? "default" : "outline"}
-                      className="cursor-pointer bg-orange-500 text-white hover:bg-orange-600"
-                      onClick={() => filterJobsByCategory('Marketing')}
-                    >
-                      <Globe className="h-3 w-3 mr-1" /> Marketing
-                    </Badge>
-                    <Badge 
-                      variant={activeFilters.includes('Product') ? "default" : "outline"}
-                      className="cursor-pointer bg-pink-500 text-white hover:bg-pink-600"
-                      onClick={() => filterJobsByCategory('Product')}
-                    >
-                      <Monitor className="h-3 w-3 mr-1" /> Product
-                    </Badge>
-                    <Badge 
-                      variant={activeFilters.includes('Support') ? "default" : "outline"}
-                      className="cursor-pointer bg-teal-500 text-white hover:bg-teal-600"
-                      onClick={() => filterJobsByCategory('Support')}
-                    >
-                      <Headphones className="h-3 w-3 mr-1" /> Support
-                    </Badge>
-                  </div>
-                </div>
-                
                 <div className="flex flex-wrap gap-2 mb-6">
                   {["Remote", "Full-time", "Internship", "Entry Level", "Tech", "Design", "Marketing"].map((filter) => (
                     <Badge 
                       key={filter}
                       variant={activeFilters.includes(filter) ? "default" : "outline"}
-                      className={`cursor-pointer hover:bg-slate-200 ${activeFilters.includes(filter) ? 'bg-well-blue text-white' : 'bg-slate-100 text-slate-800'}`}
+                      className="cursor-pointer bg-slate-50 hover:bg-slate-100"
                       onClick={() => toggleFilter(filter)}
                     >
                       {filter}
@@ -594,21 +452,11 @@ export const CareerGrowth = () => {
                       >
                         <div className="flex justify-between items-start">
                           <div>
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-2">
                               <h4 className="font-semibold text-lg">{job.title}</h4>
                               {job.featured && (
                                 <Badge className="bg-well-blue text-white">Featured</Badge>
                               )}
-                              <Badge className={`
-                                ${job.category === 'Development' ? 'bg-blue-500' : 
-                                job.category === 'Design' ? 'bg-purple-500' : 
-                                job.category === 'Data' ? 'bg-green-500' : 
-                                job.category === 'Marketing' ? 'bg-orange-500' : 
-                                job.category === 'Product' ? 'bg-pink-500' : 'bg-teal-500'} 
-                                text-white`}
-                              >
-                                {job.category}
-                              </Badge>
                             </div>
                             <p className="text-slate-600 mt-1">{job.company} • {job.location}</p>
                             <p className="text-slate-500 text-sm mt-0.5">{job.salary} • {job.type}</p>
