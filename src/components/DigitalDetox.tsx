@@ -1,22 +1,45 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Smartphone, 
   Clock, 
   TrendingDown, 
   Award, 
   Check, 
-  ChevronRight 
+  ChevronRight,
+  Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 
 export const DigitalDetox = () => {
-  const [screenTime, setScreenTime] = useState(5);
-  const [detoxGoal, setDetoxGoal] = useState(3);
-  const [appLimit, setAppLimit] = useState("Instagram");
+  // Load saved settings from localStorage or use defaults
+  const getSavedSettings = () => {
+    if (typeof window === 'undefined') return null;
+    
+    const savedSettings = localStorage.getItem('digitalDetoxSettings');
+    return savedSettings ? JSON.parse(savedSettings) : null;
+  };
+
+  const [screenTime, setScreenTime] = useState(() => getSavedSettings()?.screenTime || 5);
+  const [detoxGoal, setDetoxGoal] = useState(() => getSavedSettings()?.detoxGoal || 3);
+  const [appLimit, setAppLimit] = useState(() => getSavedSettings()?.appLimit || "Instagram");
+  
+  // Save settings when they change
+  useEffect(() => {
+    const settings = { screenTime, detoxGoal, appLimit };
+    localStorage.setItem('digitalDetoxSettings', JSON.stringify(settings));
+  }, [screenTime, detoxGoal, appLimit]);
+  
+  const saveGoals = () => {
+    toast({
+      title: "Goals Saved!",
+      description: `Your daily screen time goal is now ${detoxGoal} hours with focus on limiting ${appLimit}.`,
+    });
+  };
 
   return (
     <section id="detox" className="py-20 bg-gradient-to-b from-white to-slate-50">
@@ -122,7 +145,13 @@ export const DigitalDetox = () => {
                     <div className="text-xs text-slate-500">Which app do you want to reduce usage of?</div>
                   </div>
                   
-                  <Button className="w-full bg-well-gradient hover:opacity-90">Save Goals</Button>
+                  <Button 
+                    className="w-full bg-well-gradient hover:opacity-90 gap-2"
+                    onClick={saveGoals}
+                  >
+                    <Save className="h-4 w-4" />
+                    Save Goals
+                  </Button>
                 </div>
               </div>
             </div>

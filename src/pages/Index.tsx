@@ -1,4 +1,5 @@
 
+import { useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
@@ -12,6 +13,11 @@ import { SupportOptions } from "@/components/SupportOptions";
 import { Footer } from "@/components/Footer";
 
 const Index = () => {
+  // Set page title
+  useEffect(() => {
+    document.title = "MindMend - Your AI Wellness Companion";
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Navbar />

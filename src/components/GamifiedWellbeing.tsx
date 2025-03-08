@@ -12,13 +12,27 @@ import {
   AlarmClock,
   Clock,
   BookOpen,
-  Smartphone
+  Smartphone,
+  Footprints,
+  Leaf,
+  Coffee,
+  Music,
+  MessageSquare,
+  Lightbulb
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type Challenge = {
   id: number;
@@ -32,12 +46,21 @@ type Challenge = {
 }
 
 export const GamifiedWellbeing = () => {
-  const [level, setLevel] = useState(3);
-  const [xp, setXp] = useState(756);
-  const [streak, setStreak] = useState(5);
-  const [dailyGoalCompleted, setDailyGoalCompleted] = useState(false);
+  // Load saved state from localStorage or use defaults
+  const getSavedState = () => {
+    if (typeof window === 'undefined') return null;
+    
+    const savedState = localStorage.getItem('gamifiedState');
+    return savedState ? JSON.parse(savedState) : null;
+  };
 
-  const [challenges, setChallenges] = useState<Challenge[]>([
+  const [level, setLevel] = useState(() => getSavedState()?.level || 3);
+  const [xp, setXp] = useState(() => getSavedState()?.xp || 756);
+  const [streak, setStreak] = useState(() => getSavedState()?.streak || 5);
+  const [dailyGoalCompleted, setDailyGoalCompleted] = useState(() => getSavedState()?.dailyGoalCompleted || false);
+  const [showMoreChallenges, setShowMoreChallenges] = useState(false);
+
+  const initialChallenges: Challenge[] = [
     {
       id: 1,
       title: "Mindful Meditation",
@@ -88,7 +111,93 @@ export const GamifiedWellbeing = () => {
       progress: 0,
       isCompleted: false
     }
-  ]);
+  ];
+
+  const additionalChallenges: Challenge[] = [
+    {
+      id: 6,
+      title: "Morning Walk",
+      description: "Take a 20-minute walk before starting your workday",
+      icon: <Footprints className="h-5 w-5 text-green-600" />,
+      category: 'physical',
+      xp: 70,
+      progress: 0,
+      isCompleted: false
+    },
+    {
+      id: 7,
+      title: "Hydration Habit",
+      description: "Drink 8 glasses of water throughout the day",
+      icon: <Coffee className="h-5 w-5 text-blue-500" />,
+      category: 'physical',
+      xp: 45,
+      progress: 0,
+      isCompleted: false
+    },
+    {
+      id: 8,
+      title: "Nature Connection",
+      description: "Spend 15 minutes in nature without any devices",
+      icon: <Leaf className="h-5 w-5 text-green-500" />,
+      category: 'physical',
+      xp: 65,
+      progress: 0,
+      isCompleted: false
+    },
+    {
+      id: 9,
+      title: "Music Therapy",
+      description: "Listen to calming music for 15 minutes",
+      icon: <Music className="h-5 w-5 text-purple-600" />,
+      category: 'mental',
+      xp: 35,
+      progress: 0,
+      isCompleted: false
+    },
+    {
+      id: 10,
+      title: "Meaningful Conversation",
+      description: "Have a deep conversation with a friend or family member",
+      icon: <MessageSquare className="h-5 w-5 text-indigo-500" />,
+      category: 'social',
+      xp: 75,
+      progress: 0,
+      isCompleted: false
+    },
+    {
+      id: 11,
+      title: "Idea Generation",
+      description: "Brainstorm 10 new ideas about anything that interests you",
+      icon: <Lightbulb className="h-5 w-5 text-yellow-500" />,
+      category: 'mental',
+      xp: 55,
+      progress: 0,
+      isCompleted: false
+    }
+  ];
+
+  const [challenges, setChallenges] = useState<Challenge[]>(() => {
+    const savedChallenges = getSavedState()?.challenges;
+    return savedChallenges || initialChallenges;
+  });
+
+  const [allChallenges, setAllChallenges] = useState<Challenge[]>(() => {
+    const savedAllChallenges = getSavedState()?.allChallenges;
+    return savedAllChallenges || [...initialChallenges, ...additionalChallenges];
+  });
+
+  // Save state to localStorage when it changes
+  useEffect(() => {
+    const state = {
+      level,
+      xp,
+      streak,
+      dailyGoalCompleted,
+      challenges,
+      allChallenges
+    };
+    localStorage.setItem('gamifiedState', JSON.stringify(state));
+  }, [level, xp, streak, dailyGoalCompleted, challenges, allChallenges]);
 
   const completeDailyGoal = () => {
     if (!dailyGoalCompleted) {
@@ -125,6 +234,51 @@ export const GamifiedWellbeing = () => {
       }
       return challenge;
     }));
+
+    // Also update in allChallenges
+    setAllChallenges(allChallenges.map(challenge => {
+      if (challenge.id === id) {
+        return { ...challenge, progress: 100, isCompleted: true };
+      }
+      return challenge;
+    }));
+  };
+
+  const saveGoals = () => {
+    toast({
+      title: "Goals Saved!",
+      description: "Your well-being goals have been saved successfully.",
+    });
+  };
+
+  const discoverMoreChallenges = () => {
+    setShowMoreChallenges(true);
+  };
+
+  const addChallenge = (challenge: Challenge) => {
+    if (!challenges.some(c => c.id === challenge.id)) {
+      setChallenges([...challenges, challenge]);
+      toast({
+        title: "Challenge Added!",
+        description: `"${challenge.title}" has been added to your active challenges.`,
+      });
+      setShowMoreChallenges(false);
+    }
+  };
+
+  // Function to reset all state - useful for development and testing
+  const resetAllProgress = () => {
+    localStorage.removeItem('gamifiedState');
+    setLevel(3);
+    setXp(756);
+    setStreak(5);
+    setDailyGoalCompleted(false);
+    setChallenges(initialChallenges);
+    setAllChallenges([...initialChallenges, ...additionalChallenges]);
+    toast({
+      title: "Progress Reset",
+      description: "All progress has been reset to default values.",
+    });
   };
 
   return (
@@ -266,6 +420,18 @@ export const GamifiedWellbeing = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Development tool - Reset Progress button */}
+            <div className="text-center mt-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={resetAllProgress}
+                className="text-xs text-slate-500"
+              >
+                Reset Progress (Dev)
+              </Button>
+            </div>
           </motion.div>
           
           <motion.div 
@@ -339,7 +505,11 @@ export const GamifiedWellbeing = () => {
               </div>
               
               <div className="mt-6 text-center">
-                <Button variant="outline" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={discoverMoreChallenges}
+                >
                   Discover More Challenges
                   <Trophy className="h-4 w-4 text-amber-500" />
                 </Button>
@@ -348,6 +518,71 @@ export const GamifiedWellbeing = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Discover More Challenges Dialog */}
+      <Dialog open={showMoreChallenges} onOpenChange={setShowMoreChallenges}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Discover New Challenges</DialogTitle>
+            <DialogDescription>
+              Explore these challenges to boost your well-being journey. Add them to your active challenges to get started.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="mt-4 space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            {additionalChallenges
+              .filter(challenge => !challenges.some(c => c.id === challenge.id))
+              .map((challenge) => (
+                <div 
+                  key={challenge.id}
+                  className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex items-start gap-3 justify-between">
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100">
+                        {challenge.icon}
+                      </div>
+                      
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{challenge.title}</h4>
+                          <Badge variant="outline" className="text-xs">{challenge.xp} XP</Badge>
+                        </div>
+                        <p className="text-sm text-slate-600 mt-1">{challenge.description}</p>
+                        
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge className={`
+                            ${challenge.category === 'mental' ? 'bg-purple-100 text-purple-700' : ''}
+                            ${challenge.category === 'physical' ? 'bg-green-100 text-green-700' : ''}
+                            ${challenge.category === 'digital' ? 'bg-blue-100 text-blue-700' : ''}
+                            ${challenge.category === 'social' ? 'bg-amber-100 text-amber-700' : ''}
+                          `}>
+                            {challenge.category}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      size="sm" 
+                      onClick={() => addChallenge(challenge)}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              
+            {additionalChallenges.filter(challenge => !challenges.some(c => c.id === challenge.id)).length === 0 && (
+              <div className="text-center py-8">
+                <Trophy className="h-10 w-10 text-amber-400 mx-auto mb-2 opacity-50" />
+                <p className="text-slate-500">You've added all available challenges!</p>
+                <p className="text-sm text-slate-400 mt-1">Check back later for new ones.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

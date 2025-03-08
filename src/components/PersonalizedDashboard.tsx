@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   LineChart, 
   BarChart3, 
@@ -13,7 +13,8 @@ import {
   Frown,
   ArrowUp,
   ArrowDown,
-  Info
+  Info,
+  Pen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -23,12 +24,122 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
+
+type JournalEntry = {
+  id: number;
+  text: string;
+  timestamp: string;
+  mood: 'positive' | 'neutral' | 'negative';
+}
 
 export const PersonalizedDashboard = () => {
   const [currentDate] = useState(new Date());
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  
+  const [showJournalDialog, setShowJournalDialog] = useState(false);
+  const [journalEntryText, setJournalEntryText] = useState("");
+  const [selectedMood, setSelectedMood] = useState<'positive' | 'neutral' | 'negative'>('positive');
+  
+  // Get journal entries from localStorage or use defaults
+  const getStoredEntries = () => {
+    if (typeof window === 'undefined') return [];
+    
+    const savedEntries = localStorage.getItem('journalEntries');
+    if (savedEntries) {
+      return JSON.parse(savedEntries);
+    } else {
+      return [
+        {
+          id: 1,
+          text: "Today I feel more energized than yesterday. The meditation session helped me focus better during my study session.",
+          timestamp: "Yesterday, 8:45 PM",
+          mood: 'positive'
+        },
+        {
+          id: 2,
+          text: "Feeling a bit anxious about tomorrow's presentation, but I've prepared well. Going to try the breathing exercises before bed.",
+          timestamp: "2 days ago, 10:20 PM",
+          mood: 'neutral'
+        }
+      ];
+    }
+  };
+  
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(getStoredEntries);
+  
+  // Save entries to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('journalEntries', JSON.stringify(journalEntries));
+  }, [journalEntries]);
+  
+  const handleJournalSubmit = () => {
+    if (journalEntryText.trim() === '') {
+      toast({
+        title: "Entry cannot be empty",
+        description: "Please write something in your journal entry.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const formattedTime = `${hours > 12 ? hours - 12 : hours}:${minutes < 10 ? '0' + minutes : minutes} ${hours >= 12 ? 'PM' : 'AM'}`;
+    
+    const newEntry: JournalEntry = {
+      id: Date.now(),
+      text: journalEntryText,
+      timestamp: `Today, ${formattedTime}`,
+      mood: selectedMood
+    };
+    
+    setJournalEntries([newEntry, ...journalEntries]);
+    setJournalEntryText("");
+    setShowJournalDialog(false);
+    
+    toast({
+      title: "Journal Entry Added",
+      description: "Your journal entry has been saved successfully.",
+    });
+  };
+  
+  const getMoodIcon = (mood: string) => {
+    switch (mood) {
+      case 'positive':
+        return <Smile className="h-3 w-3 text-green-500" />;
+      case 'neutral':
+        return <Meh className="h-3 w-3 text-amber-500" />;
+      case 'negative':
+        return <Frown className="h-3 w-3 text-red-500" />;
+      default:
+        return <Meh className="h-3 w-3 text-amber-500" />;
+    }
+  };
+  
+  const getMoodText = (mood: string) => {
+    switch (mood) {
+      case 'positive':
+        return <span className="text-xs font-medium text-green-600">Positive</span>;
+      case 'neutral':
+        return <span className="text-xs font-medium text-amber-600">Neutral</span>;
+      case 'negative':
+        return <span className="text-xs font-medium text-red-600">Negative</span>;
+      default:
+        return <span className="text-xs font-medium text-amber-600">Neutral</span>;
+    }
+  };
   
   return (
     <section id="dashboard" className="py-20 bg-gradient-to-b from-white to-slate-50">
@@ -238,34 +349,48 @@ export const PersonalizedDashboard = () => {
                   <div className="bg-white rounded-lg p-4 border border-slate-200">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-medium">AI Personalized Journal</h4>
-                      <Button variant="outline" size="sm">Write Entry</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="gap-2"
+                        onClick={() => setShowJournalDialog(true)}
+                      >
+                        <Pen className="h-3.5 w-3.5" />
+                        Write Entry
+                      </Button>
                     </div>
                     
-                    <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 mb-3">
-                      <p className="text-sm text-slate-600 italic">
-                        "Today I feel more energized than yesterday. The meditation session helped me focus better during my study session."
-                      </p>
-                      <div className="flex justify-between mt-2">
-                        <span className="text-xs text-slate-400">Yesterday, 8:45 PM</span>
-                        <div className="flex items-center gap-1">
-                          <Smile className="h-3 w-3 text-green-500" />
-                          <span className="text-xs font-medium text-green-600">Positive</span>
-                        </div>
+                    {journalEntries.length > 0 ? (
+                      <div className="space-y-3">
+                        {journalEntries.slice(0, 3).map((entry) => (
+                          <div key={entry.id} className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                            <p className="text-sm text-slate-600 italic">
+                              "{entry.text}"
+                            </p>
+                            <div className="flex justify-between mt-2">
+                              <span className="text-xs text-slate-400">{entry.timestamp}</span>
+                              <div className="flex items-center gap-1">
+                                {getMoodIcon(entry.mood)}
+                                {getMoodText(entry.mood)}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {journalEntries.length > 3 && (
+                          <div className="text-center pt-2">
+                            <Button variant="ghost" size="sm" className="text-sm text-slate-500">
+                              See all entries
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    
-                    <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                      <p className="text-sm text-slate-600 italic">
-                        "Feeling a bit anxious about tomorrow's presentation, but I've prepared well. Going to try the breathing exercises before bed."
-                      </p>
-                      <div className="flex justify-between mt-2">
-                        <span className="text-xs text-slate-400">2 days ago, 10:20 PM</span>
-                        <div className="flex items-center gap-1">
-                          <Meh className="h-3 w-3 text-amber-500" />
-                          <span className="text-xs font-medium text-amber-600">Neutral</span>
-                        </div>
+                    ) : (
+                      <div className="text-center py-6 bg-slate-50 rounded-lg border border-slate-100">
+                        <p className="text-slate-500">No journal entries yet.</p>
+                        <p className="text-sm text-slate-400 mt-1">Write your first entry to get started!</p>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </TabsContent>
                 
@@ -312,6 +437,64 @@ export const PersonalizedDashboard = () => {
           </motion.div>
         </div>
       </div>
+      
+      {/* Journal Entry Dialog */}
+      <Dialog open={showJournalDialog} onOpenChange={setShowJournalDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Write Journal Entry</DialogTitle>
+            <DialogDescription>
+              Share your thoughts, feelings, and experiences. Your entries help our AI better understand and support your well-being journey.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            <Textarea 
+              placeholder="How are you feeling today? What's on your mind?"
+              className="min-h-[150px]"
+              value={journalEntryText}
+              onChange={(e) => setJournalEntryText(e.target.value)}
+            />
+            
+            <div>
+              <label className="text-sm font-medium mb-2 block">How are you feeling?</label>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant={selectedMood === 'positive' ? 'default' : 'outline'}
+                  className={selectedMood === 'positive' ? 'bg-green-600 hover:bg-green-700' : ''}
+                  onClick={() => setSelectedMood('positive')}
+                >
+                  <Smile className="mr-2 h-4 w-4" />
+                  Good
+                </Button>
+                <Button
+                  type="button"
+                  variant={selectedMood === 'neutral' ? 'default' : 'outline'}
+                  className={selectedMood === 'neutral' ? 'bg-amber-600 hover:bg-amber-700' : ''}
+                  onClick={() => setSelectedMood('neutral')}
+                >
+                  <Meh className="mr-2 h-4 w-4" />
+                  Neutral
+                </Button>
+                <Button
+                  type="button"
+                  variant={selectedMood === 'negative' ? 'default' : 'outline'}
+                  className={selectedMood === 'negative' ? 'bg-red-600 hover:bg-red-700' : ''}
+                  onClick={() => setSelectedMood('negative')}
+                >
+                  <Frown className="mr-2 h-4 w-4" />
+                  Not Good
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex justify-end pt-2">
+              <Button onClick={handleJournalSubmit}>Save Entry</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
