@@ -2,39 +2,36 @@
 import { useState, useEffect } from "react";
 import { 
   LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell
-} from "recharts";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  AlertCircle, 
+  BarChart3, 
+  PieChart, 
   Calendar, 
-  LineChart as LineChartIcon, 
-  PieChart as PieChartIcon, 
-  BarChart as BarChartIcon, 
-  BookOpen, 
-  LayoutDashboard, 
-  Award, 
-  ArrowRight, 
-  Smile, 
-  Meh, 
+  BrainCircuit, 
+  GraduationCap,
+  Smartphone,
+  Smile,
+  Meh,
   Frown,
+  ArrowUp,
+  ArrowDown,
+  Info,
+  Pen,
   Trash2
 } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,472 +42,445 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toast } from "@/hooks/use-toast";
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
-
-// Sample chart data
-const sleepData = [
-  { name: 'Mon', hours: 7.2 },
-  { name: 'Tue', hours: 6.8 },
-  { name: 'Wed', hours: 7.5 },
-  { name: 'Thu', hours: 8.1 },
-  { name: 'Fri', hours: 6.7 },
-  { name: 'Sat', hours: 7.9 },
-  { name: 'Sun', hours: 8.3 }
-];
-
-const moodData = [
-  { name: 'Mon', value: 7 },
-  { name: 'Tue', value: 6 },
-  { name: 'Wed', value: 8 },
-  { name: 'Thu', value: 9 },
-  { name: 'Fri', value: 7 },
-  { name: 'Sat', value: 8 },
-  { name: 'Sun', value: 9 }
-];
-
-const screenTimeData = [
-  { name: 'Mon', hours: 4.2 },
-  { name: 'Tue', hours: 3.8 },
-  { name: 'Wed', hours: 2.5 },
-  { name: 'Thu', hours: 3.1 },
-  { name: 'Fri', hours: 5.7 },
-  { name: 'Sat', hours: 6.9 },
-  { name: 'Sun', hours: 4.3 }
-];
-
-const activityBreakdown = [
-  { name: 'Work', value: 35 },
-  { name: 'Exercise', value: 10 },
-  { name: 'Leisure', value: 20 },
-  { name: 'Social', value: 15 },
-  { name: 'Learning', value: 20 }
-];
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/use-toast";
+import { motion } from "framer-motion";
 
 type JournalEntry = {
-  id: string;
-  date: string;
+  id: number;
   text: string;
+  timestamp: string;
   mood: 'positive' | 'neutral' | 'negative';
-};
+}
 
 export const PersonalizedDashboard = () => {
-  const [insights, setInsights] = useState<string[]>([
-    "Your sleep has improved by 12% this week",
-    "Mood dips are correlated with increased screen time",
-    "Adding more exercise could improve your evening mood",
-    "Social interactions boost your well-being scores"
-  ]);
+  const [currentDate] = useState(new Date());
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [showJournalDialog, setShowJournalDialog] = useState(false);
-  const [journalEntryText, setJournalEntryText] = useState('');
-  const [selectedMood, setSelectedMood] = useState<'positive' | 'neutral' | 'negative'>('neutral');
+  const [journalEntryText, setJournalEntryText] = useState("");
+  const [selectedMood, setSelectedMood] = useState<'positive' | 'neutral' | 'negative'>('positive');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
+  const [entryToDelete, setEntryToDelete] = useState<number | null>(null);
+  const [showAllEntries, setShowAllEntries] = useState(false);
   
-  // Load journal entries from localStorage
-  useEffect(() => {
+  const getStoredEntries = () => {
+    if (typeof window === 'undefined') return [];
+    
     const savedEntries = localStorage.getItem('journalEntries');
     if (savedEntries) {
-      setJournalEntries(JSON.parse(savedEntries));
+      return JSON.parse(savedEntries);
+    } else {
+      return [
+        {
+          id: 1,
+          text: "Today I feel more energized than yesterday. The meditation session helped me focus better during my study session.",
+          timestamp: "Yesterday, 8:45 PM",
+          mood: 'positive'
+        },
+        {
+          id: 2,
+          text: "Feeling a bit anxious about tomorrow's presentation, but I've prepared well. Going to try the breathing exercises before bed.",
+          timestamp: "2 days ago, 10:20 PM",
+          mood: 'neutral'
+        }
+      ];
     }
-  }, []);
+  };
   
-  // Save journal entries to localStorage
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(getStoredEntries);
+  
   useEffect(() => {
     localStorage.setItem('journalEntries', JSON.stringify(journalEntries));
   }, [journalEntries]);
   
   const handleJournalSubmit = () => {
-    if (!journalEntryText.trim()) {
+    if (journalEntryText.trim() === '') {
       toast({
-        title: "Error",
-        description: "Journal entry cannot be empty",
-        variant: "destructive",
+        title: "Entry cannot be empty",
+        description: "Please write something in your journal entry.",
+        variant: "destructive"
       });
       return;
     }
     
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const formattedTime = `${hours > 12 ? hours - 12 : hours}:${minutes < 10 ? '0' + minutes : minutes} ${hours >= 12 ? 'PM' : 'AM'}`;
+    
     const newEntry: JournalEntry = {
-      id: Date.now().toString(),
-      date: new Date().toLocaleDateString(),
+      id: Date.now(),
       text: journalEntryText,
+      timestamp: `Today, ${formattedTime}`,
       mood: selectedMood
     };
     
-    setJournalEntries(prev => [newEntry, ...prev]);
-    setJournalEntryText('');
-    setSelectedMood('neutral');
+    setJournalEntries([newEntry, ...journalEntries]);
+    setJournalEntryText("");
     setShowJournalDialog(false);
     
     toast({
-      title: "Journal entry saved",
-      description: "Your thoughts have been recorded.",
+      title: "Journal Entry Added",
+      description: "Your journal entry has been saved successfully.",
     });
   };
   
-  const handleDeleteEntry = (id: string) => {
+  const handleDeleteEntry = (id: number) => {
     setEntryToDelete(id);
     setShowDeleteDialog(true);
   };
   
   const confirmDeleteEntry = () => {
-    if (entryToDelete) {
-      setJournalEntries(prev => prev.filter(entry => entry.id !== entryToDelete));
-      setShowDeleteDialog(false);
-      setEntryToDelete(null);
-      
-      toast({
-        title: "Entry deleted",
-        description: "Your journal entry has been removed.",
-      });
-    }
+    if (entryToDelete === null) return;
+    
+    const updatedEntries = journalEntries.filter(entry => entry.id !== entryToDelete);
+    setJournalEntries(updatedEntries);
+    setShowDeleteDialog(false);
+    setEntryToDelete(null);
+    
+    toast({
+      title: "Entry Deleted",
+      description: "Your journal entry has been deleted.",
+    });
   };
   
   const getMoodIcon = (mood: string) => {
-    switch(mood) {
-      case 'positive': return <Smile className="h-5 w-5 text-green-500" />;
-      case 'neutral': return <Meh className="h-5 w-5 text-amber-500" />;
-      case 'negative': return <Frown className="h-5 w-5 text-red-500" />;
-      default: return <Meh className="h-5 w-5 text-amber-500" />;
+    switch (mood) {
+      case 'positive':
+        return <Smile className="h-3 w-3 text-green-500" />;
+      case 'neutral':
+        return <Meh className="h-3 w-3 text-amber-500" />;
+      case 'negative':
+        return <Frown className="h-3 w-3 text-red-500" />;
+      default:
+        return <Meh className="h-3 w-3 text-amber-500" />;
     }
   };
-
+  
+  const getMoodText = (mood: string) => {
+    switch (mood) {
+      case 'positive':
+        return <span className="text-xs font-medium text-green-600">Positive</span>;
+      case 'neutral':
+        return <span className="text-xs font-medium text-amber-600">Neutral</span>;
+      case 'negative':
+        return <span className="text-xs font-medium text-red-600">Negative</span>;
+      default:
+        return <span className="text-xs font-medium text-amber-600">Neutral</span>;
+    }
+  };
+  
   return (
-    <section id="dashboard" className="py-20 bg-slate-50">
+    <section id="dashboard" className="py-20 bg-gradient-to-b from-white to-slate-50">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-sm font-medium text-slate-600 mb-4">
-            Personalized Insights
+            Your Dashboard
           </span>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Your Well-Being <span className="text-gradient">Dashboard</span>
+            <span className="text-gradient">AI-Personalized</span> Dashboard
           </h2>
           <p className="text-slate-600">
-            Track your progress, gain insights, and view personalized recommendations based on your data and activities.
+            Your customized wellness command center with AI-driven insights and recommendations tailored to your needs.
           </p>
         </div>
         
-        <div className="glass-card rounded-xl border border-slate-200 p-4 md:p-6 mb-10">
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="mb-6 w-full flex flex-wrap justify-start overflow-auto">
-              <TabsTrigger value="overview" className="flex items-center">
-                <LayoutDashboard className="h-4 w-4 mr-2" /> Overview
-              </TabsTrigger>
-              <TabsTrigger value="mood" className="flex items-center">
-                <LineChartIcon className="h-4 w-4 mr-2" /> Mood Tracking
-              </TabsTrigger>
-              <TabsTrigger value="sleep" className="flex items-center">
-                <BarChartIcon className="h-4 w-4 mr-2" /> Sleep Analysis
-              </TabsTrigger>
-              <TabsTrigger value="screen" className="flex items-center">
-                <PieChartIcon className="h-4 w-4 mr-2" /> Screen Time
-              </TabsTrigger>
-              <TabsTrigger value="journal" className="flex items-center">
-                <BookOpen className="h-4 w-4 mr-2" /> Journal
-              </TabsTrigger>
-              <TabsTrigger value="achievements" className="flex items-center">
-                <Award className="h-4 w-4 mr-2" /> Achievements
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="overview" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">AI Insights</h3>
-                    <AlertCircle className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <ul className="space-y-3">
-                    {insights.map((insight, index) => (
-                      <motion.li 
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="text-sm text-slate-600 pl-4 border-l-2 border-well-blue"
-                      >
-                        {insight}
-                      </motion.li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">Weekly Mood</h3>
-                    <LineChartIcon className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <div className="h-52">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={moodData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis domain={[0, 10]} />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="value" stroke="#8884d8" activeDot={{ r: 8 }} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-                
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">Activity Breakdown</h3>
-                    <PieChartIcon className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <div className="h-52">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={activityBreakdown}
-                          innerRadius={60}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {activityBreakdown.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <motion.div 
+            className="lg:col-span-1"
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="glass-card p-6 rounded-xl border border-slate-200 mb-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-semibold text-lg">Today</h3>
+                <span className="text-sm text-slate-500">{dayNames[currentDate.getDay()]}, {monthNames[currentDate.getMonth()]} {currentDate.getDate()}</span>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">Sleep Tracking</h3>
-                    <BarChartIcon className="h-4 w-4 text-slate-400" />
+              <div className="space-y-4">
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-sm">Mood Trend</h4>
+                    <div className="flex items-center gap-1 text-green-600 text-xs">
+                      <ArrowUp className="h-3 w-3" /> 
+                      <span>Improving</span>
+                    </div>
                   </div>
-                  <div className="h-60">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={sleepData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis domain={[0, 10]} />
-                        <Tooltip />
-                        <Bar dataKey="hours" fill="#0088FE" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-                
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">Screen Time</h3>
-                    <BarChartIcon className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <div className="h-60">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={screenTimeData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis domain={[0, 10]} />
-                        <Tooltip />
-                        <Bar dataKey="hours" fill="#00C49F" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="journal" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-              <div className="mb-4 flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Your Journal Entries</h3>
-                <Button onClick={() => setShowJournalDialog(true)}>New Entry</Button>
-              </div>
-              
-              {journalEntries.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg border border-dashed border-slate-300">
-                  <BookOpen className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                  <h4 className="text-lg font-medium mb-2">No journal entries yet</h4>
-                  <p className="text-slate-500 mb-4">Start documenting your thoughts and feelings</p>
-                  <Button onClick={() => setShowJournalDialog(true)} variant="outline">
-                    Write First Entry
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {journalEntries.map((entry) => (
-                    <div key={entry.id} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-2 mb-2">
-                          {getMoodIcon(entry.mood)}
-                          <span className="text-sm font-medium">{entry.date}</span>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-slate-400 hover:text-red-500"
-                          onClick={() => handleDeleteEntry(entry.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                  
+                  <div className="flex justify-around py-2">
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center mb-1">
+                        <Frown className="h-4 w-4 text-slate-500" />
                       </div>
-                      <p className="text-slate-600 whitespace-pre-wrap">{entry.text}</p>
+                      <span className="text-xs">Mon</span>
                     </div>
-                  ))}
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center mb-1">
+                        <Meh className="h-4 w-4 text-slate-500" />
+                      </div>
+                      <span className="text-xs">Tue</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center mb-1">
+                        <Meh className="h-4 w-4 text-slate-500" />
+                      </div>
+                      <span className="text-xs">Wed</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center mb-1">
+                        <Smile className="h-4 w-4 text-amber-500" />
+                      </div>
+                      <span className="text-xs">Thu</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mb-1">
+                        <Smile className="h-4 w-4 text-green-500" />
+                      </div>
+                      <span className="text-xs font-medium">Today</span>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="mood" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-              <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-                <h3 className="text-lg font-semibold mb-4">Mood Trends</h3>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={moodData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis domain={[0, 10]} />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} activeDot={{ r: 8 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-6 space-y-4">
-                  <h4 className="font-medium">Mood Insights</h4>
-                  <ul className="space-y-2">
-                    <li className="text-sm text-slate-600 pl-4 border-l-2 border-green-500">
-                      Your mood is consistently higher on weekends
-                    </li>
-                    <li className="text-sm text-slate-600 pl-4 border-l-2 border-amber-500">
-                      Midweek dips might be related to work stress
-                    </li>
-                    <li className="text-sm text-slate-600 pl-4 border-l-2 border-purple-500">
-                      Your mood improved after starting morning meditation
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="sleep" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-              <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-                <h3 className="text-lg font-semibold mb-4">Sleep Quality Analysis</h3>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={sleepData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis domain={[0, 10]} />
-                      <Tooltip />
-                      <Bar dataKey="hours" fill="#0088FE" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-6 space-y-4">
-                  <h4 className="font-medium">Sleep Insights</h4>
-                  <ul className="space-y-2">
-                    <li className="text-sm text-slate-600 pl-4 border-l-2 border-blue-500">
-                      You average 7.5 hours of sleep per night
-                    </li>
-                    <li className="text-sm text-slate-600 pl-4 border-l-2 border-blue-300">
-                      Sleep quality improves when you exercise during the day
-                    </li>
-                    <li className="text-sm text-slate-600 pl-4 border-l-2 border-blue-700">
-                      Late-night screen time correlates with poorer sleep quality
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="screen" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-              <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-                <h3 className="text-lg font-semibold mb-4">Screen Time Analysis</h3>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={screenTimeData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis domain={[0, 10]} />
-                      <Tooltip />
-                      <Bar dataKey="hours" fill="#00C49F" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-6 space-y-4">
-                  <h4 className="font-medium">Digital Wellness Insights</h4>
-                  <ul className="space-y-2">
-                    <li className="text-sm text-slate-600 pl-4 border-l-2 border-teal-500">
-                      Your screen time increases significantly on weekends
-                    </li>
-                    <li className="text-sm text-slate-600 pl-4 border-l-2 border-teal-300">
-                      Social media accounts for 45% of your screen time
-                    </li>
-                    <li className="text-sm text-slate-600 pl-4 border-l-2 border-teal-700">
-                      You've reduced overall screen time by 12% this month
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="achievements" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-              <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-                <h3 className="text-lg font-semibold mb-4">Your Achievements</h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border border-slate-200 rounded-lg text-center">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Award className="h-6 w-6 text-purple-500" />
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                  <h4 className="font-medium text-sm mb-3">AI Recommendations</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <BrainCircuit className="h-4 w-4 text-well-blue flex-shrink-0" />
+                      <span>Try a 10-minute guided meditation</span>
                     </div>
-                    <h4 className="font-medium">Mindfulness Master</h4>
-                    <p className="text-sm text-slate-500">Completed 10 meditation sessions</p>
+                    <div className="flex items-center gap-2 text-sm">
+                      <GraduationCap className="h-4 w-4 text-well-purple flex-shrink-0" />
+                      <span>Update your career roadmap</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Smartphone className="h-4 w-4 text-well-teal flex-shrink-0" />
+                      <span>Join today's Digital Detox challenge</span>
+                    </div>
                   </div>
-                  
-                  <div className="p-4 border border-slate-200 rounded-lg text-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Award className="h-6 w-6 text-blue-500" />
+                </div>
+                
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                  <h4 className="font-medium text-sm mb-3">Weekly Progress</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>Mental Well-being</span>
+                        <span className="font-medium">68%</span>
+                      </div>
+                      <Progress value={68} className="h-1.5" />
                     </div>
-                    <h4 className="font-medium">Sleep Improver</h4>
-                    <p className="text-sm text-slate-500">Maintained healthy sleep schedule for 7 days</p>
-                  </div>
-                  
-                  <div className="p-4 border border-slate-200 rounded-lg text-center">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Award className="h-6 w-6 text-green-500" />
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>Career Development</span>
+                        <span className="font-medium">52%</span>
+                      </div>
+                      <Progress value={52} className="h-1.5" />
                     </div>
-                    <h4 className="font-medium">Digital Detoxer</h4>
-                    <p className="text-sm text-slate-500">Reduced screen time by 20%</p>
-                  </div>
-                  
-                  <div className="p-4 border border-slate-200 rounded-lg text-center">
-                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Award className="h-6 w-6 text-amber-500" />
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>Digital Balance</span>
+                        <span className="font-medium">77%</span>
+                      </div>
+                      <Progress value={77} className="h-1.5" />
                     </div>
-                    <h4 className="font-medium">Mood Tracker</h4>
-                    <p className="text-sm text-slate-500">Logged mood for 14 consecutive days</p>
-                  </div>
-                  
-                  <div className="p-4 border border-slate-200 rounded-lg text-center">
-                    <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Award className="h-6 w-6 text-pink-500" />
-                    </div>
-                    <h4 className="font-medium">Journal Keeper</h4>
-                    <p className="text-sm text-slate-500">Created 5 journal entries</p>
-                  </div>
-                  
-                  <div className="p-4 border border-slate-200 rounded-lg text-center">
-                    <div className="w-12 h-12 bg-well-gradient rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Award className="h-6 w-6 text-white" />
-                    </div>
-                    <h4 className="font-medium">Wellness Explorer</h4>
-                    <p className="text-sm text-slate-500">Used all features of the platform</p>
                   </div>
                 </div>
               </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            className="lg:col-span-3"
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="glass-card rounded-xl border border-slate-200 overflow-hidden">
+              <Tabs defaultValue="overview" className="w-full">
+                <div className="border-b border-slate-100">
+                  <div className="px-6 pt-4">
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="overview">Overview</TabsTrigger>
+                      <TabsTrigger value="mental">Mental Health</TabsTrigger>
+                      <TabsTrigger value="career">Career Growth</TabsTrigger>
+                      <TabsTrigger value="digital">Digital Balance</TabsTrigger>
+                    </TabsList>
+                  </div>
+                </div>
+                
+                <TabsContent value="overview" className="focus-visible:outline-none focus-visible:ring-0 p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-medium">Wellness Insights</h4>
+                        <LineChart className="h-5 w-5 text-slate-400" />
+                      </div>
+                      <div className="h-40 flex items-center justify-center bg-slate-50 rounded-lg border border-slate-100">
+                        <div className="text-center">
+                          <p className="text-sm text-slate-500 mb-2">Your personalized wellness chart</p>
+                          <Button variant="outline" size="sm">Generate Insights</Button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-medium">Weekly Goals</h4>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                              <Info className="h-4 w-4 text-slate-400" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent>
+                            <p className="text-sm">Set and track your weekly wellness goals.</p>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-md bg-amber-100 flex items-center justify-center">
+                              <Calendar className="h-3 w-3 text-amber-600" />
+                            </div>
+                            <span className="text-sm">Meditation practice</span>
+                          </div>
+                          <span className="text-sm font-medium">3/5 days</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center">
+                              <Smartphone className="h-3 w-3 text-blue-600" />
+                            </div>
+                            <span className="text-sm">Screen time reduction</span>
+                          </div>
+                          <span className="text-sm font-medium">-20%</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-md bg-purple-100 flex items-center justify-center">
+                              <GraduationCap className="h-3 w-3 text-purple-600" />
+                            </div>
+                            <span className="text-sm">Career skill learning</span>
+                          </div>
+                          <span className="text-sm font-medium">2/3 hrs</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4 border border-slate-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-medium">AI Personalized Journal</h4>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="gap-2"
+                        onClick={() => setShowJournalDialog(true)}
+                      >
+                        <Pen className="h-3.5 w-3.5" />
+                        Write Entry
+                      </Button>
+                    </div>
+                    
+                    {journalEntries.length > 0 ? (
+                      <div className="space-y-3">
+                        {(showAllEntries ? journalEntries : journalEntries.slice(0, 3)).map((entry) => (
+                          <div key={entry.id} className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                            <p className="text-sm text-slate-600 italic">
+                              "{entry.text}"
+                            </p>
+                            <div className="flex justify-between mt-2">
+                              <span className="text-xs text-slate-400">{entry.timestamp}</span>
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1">
+                                  {getMoodIcon(entry.mood)}
+                                  {getMoodText(entry.mood)}
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-5 w-5 text-slate-400 hover:text-red-500"
+                                  onClick={() => handleDeleteEntry(entry.id)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {journalEntries.length > 3 && (
+                          <div className="text-center pt-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-sm text-slate-500"
+                              onClick={() => setShowAllEntries(!showAllEntries)}
+                            >
+                              {showAllEntries ? "Show less" : "See all entries"}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 bg-slate-50 rounded-lg border border-slate-100">
+                        <p className="text-slate-500">No journal entries yet.</p>
+                        <p className="text-sm text-slate-400 mt-1">Write your first entry to get started!</p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="mental" className="focus-visible:outline-none focus-visible:ring-0 p-6">
+                  <div className="text-center py-10">
+                    <BrainCircuit className="h-10 w-10 text-well-blue mx-auto mb-3" />
+                    <h3 className="text-lg font-medium mb-2">Personalized Mental Health Dashboard</h3>
+                    <p className="text-slate-500 max-w-md mx-auto mb-6">
+                      Track your mood patterns, meditation progress, and get AI-powered mental wellness recommendations.
+                    </p>
+                    <Button className="bg-well-blue text-white hover:bg-well-blue/90">
+                      Activate Mental Health Tracking
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="career" className="focus-visible:outline-none focus-visible:ring-0 p-6">
+                  <div className="text-center py-10">
+                    <GraduationCap className="h-10 w-10 text-well-purple mx-auto mb-3" />
+                    <h3 className="text-lg font-medium mb-2">Career Development Dashboard</h3>
+                    <p className="text-slate-500 max-w-md mx-auto mb-6">
+                      Track your skill development, job application progress, and get AI-powered career recommendations.
+                    </p>
+                    <Button className="bg-well-purple text-white hover:bg-well-purple/90">
+                      Set Up Career Goals
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="digital" className="focus-visible:outline-none focus-visible:ring-0 p-6">
+                  <div className="text-center py-10">
+                    <Smartphone className="h-10 w-10 text-well-teal mx-auto mb-3" />
+                    <h3 className="text-lg font-medium mb-2">Digital Wellness Dashboard</h3>
+                    <p className="text-slate-500 max-w-md mx-auto mb-6">
+                      Track your screen time, app usage, and get AI-powered recommendations for digital balance.
+                    </p>
+                    <Button className="bg-well-teal text-white hover:bg-well-teal/90">
+                      Connect Your Devices
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </motion.div>
         </div>
       </div>
       
