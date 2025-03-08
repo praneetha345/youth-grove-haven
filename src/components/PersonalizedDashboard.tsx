@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   LineChart, 
@@ -483,5 +484,84 @@ export const PersonalizedDashboard = () => {
         </div>
       </div>
       
-      <
-
+      {/* Journal Entry Dialog */}
+      <Dialog open={showJournalDialog} onOpenChange={setShowJournalDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Write a Journal Entry</DialogTitle>
+            <DialogDescription>
+              Record your thoughts, feelings, and reflections for today.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <Textarea
+              placeholder="How are you feeling today?"
+              value={journalEntryText}
+              onChange={(e) => setJournalEntryText(e.target.value)}
+              className="min-h-32"
+            />
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Mood:</span>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={selectedMood === 'positive' ? 'default' : 'outline'}
+                  size="sm"
+                  className={`gap-1.5 ${selectedMood === 'positive' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                  onClick={() => setSelectedMood('positive')}
+                >
+                  <Smile className="h-4 w-4" />
+                  Positive
+                </Button>
+                <Button
+                  type="button" 
+                  variant={selectedMood === 'neutral' ? 'default' : 'outline'}
+                  size="sm"
+                  className={`gap-1.5 ${selectedMood === 'neutral' ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                  onClick={() => setSelectedMood('neutral')}
+                >
+                  <Meh className="h-4 w-4" />
+                  Neutral
+                </Button>
+                <Button
+                  type="button"
+                  variant={selectedMood === 'negative' ? 'default' : 'outline'}
+                  size="sm"
+                  className={`gap-1.5 ${selectedMood === 'negative' ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                  onClick={() => setSelectedMood('negative')}
+                >
+                  <Frown className="h-4 w-4" />
+                  Negative
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end">
+            <Button type="button" onClick={handleJournalSubmit}>Save Entry</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Journal Entry</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this journal entry? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteEntry} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </section>
+  );
+};
