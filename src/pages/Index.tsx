@@ -11,6 +11,7 @@ import { PersonalizedDashboard } from "@/components/PersonalizedDashboard";
 import { Testimonials } from "@/components/Testimonials";
 import { SupportOptions } from "@/components/SupportOptions";
 import { Footer } from "@/components/Footer";
+import { Toaster } from "@/components/ui/toaster";
 
 const Index = () => {
   // Set page title
@@ -30,6 +31,14 @@ const Index = () => {
       
       h1, h2, h3, h4, h5, h6, p, span, div {
         color: inherit;
+      }
+      
+      /* Fix for job opportunities text color */
+      .career-opportunity-title,
+      .career-opportunity-company,
+      .career-opportunity-location,
+      .career-opportunity-description {
+        color: #1e293b !important;
       }
     `;
     document.head.appendChild(style);
@@ -52,6 +61,7 @@ const Index = () => {
       <SupportOptions />
       <Testimonials />
       <Footer />
+      <Toaster />
     </div>
   );
 };
